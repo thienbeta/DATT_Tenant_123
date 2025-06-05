@@ -1,11 +1,21 @@
 const express = require('express');
 const { Sequelize } = require('sequelize');
 const sequelize = require('./config/database'); // Giả định file cấu hình Sequelize
+const { createClient } = require('redis');
 
 const app = express();
 
+// Tạo client Redis
+const redisClient = createClient();
+redisClient.on('error', (err) => console.error('Redis error:', err));
+
 // Middleware để xử lý JSON
 app.use(express.json());
+// Kết nối Redis
+(async () => {
+  await redisClient.connect();
+  console.log('✅ Đã kết nối Redis');
+})();
 
 // Khởi tạo object db để chứa các model
 const db = {};
