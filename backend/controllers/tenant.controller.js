@@ -1,9 +1,9 @@
-const { Tenant } = require('../models');
+const { TenantOfferedPackage } = require('../models');
 
 exports.getAll = async (req, res) => {
   try {
-    const tenants = await Tenant.findAll();
-    res.status(200).json(tenants);
+    const records = await TenantOfferedPackage.findAll();
+    res.status(200).json(records);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -11,11 +11,14 @@ exports.getAll = async (req, res) => {
 
 exports.getById = async (req, res) => {
   try {
-    const tenant = await Tenant.findByPk(req.params.id);
-    if (!tenant) {
-      return res.status(404).json({ error: 'Tenant not found' });
+    const { tenantId, packageId } = req.params;
+    const record = await TenantOfferedPackage.findOne({
+      where: { tenant_id: tenantId, package_id: packageId },
+    });
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found' });
     }
-    res.status(200).json(tenant);
+    res.status(200).json(record);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -23,8 +26,8 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const tenant = await Tenant.create(req.body);
-    res.status(201).json(tenant);
+    const record = await TenantOfferedPackage.create(req.body);
+    res.status(201).json(record);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -32,12 +35,15 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const tenant = await Tenant.findByPk(req.params.id);
-    if (!tenant) {
-      return res.status(404).json({ error: 'Tenant not found' });
+    const { tenantId, packageId } = req.params;
+    const record = await TenantOfferedPackage.findOne({
+      where: { tenant_id: tenantId, package_id: packageId },
+    });
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found' });
     }
-    await tenant.update(req.body);
-    res.status(200).json(tenant);
+    await record.update(req.body);
+    res.status(200).json(record);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -45,11 +51,14 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
-    const tenant = await Tenant.findByPk(req.params.id);
-    if (!tenant) {
-      return res.status(404).json({ error: 'Tenant not found' });
+    const { tenantId, packageId } = req.params;
+    const record = await TenantOfferedPackage.findOne({
+      where: { tenant_id: tenantId, package_id: packageId },
+    });
+    if (!record) {
+      return res.status(404).json({ error: 'Record not found' });
     }
-    await tenant.destroy();
+    await record.destroy();
     res.status(204).json({});
   } catch (error) {
     res.status(500).json({ error: error.message });
