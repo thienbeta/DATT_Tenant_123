@@ -1,22 +1,29 @@
-// backend/models/Tenant
 module.exports = (sequelize, DataTypes) => {
   const Tenant = sequelize.define('Tenant', {
     tenant_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       primaryKey: true,
       autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     admin_user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'inactive', 'deleted'),
+      defaultValue: 'active',
     },
   }, {
     tableName: 'tenants',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false,
+    timestamps: false,
   });
 
   Tenant.associate = (models) => {
