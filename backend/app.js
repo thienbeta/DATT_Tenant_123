@@ -38,8 +38,7 @@ Object.values(db).forEach(model => {
 });
 
 // Định nghĩa các route
-app.use('/api/products', require('./routes/product.routes'));
-app.use('/api/brands', require('./routes/brand.routes'));
+
 app.use('/api/tenants', require('./routes/tenant.routes')); // Route mới
 app.use('/api/users', require('./routes/user.routes')); // Route mới
 app.use('/api/service-packages', require('./routes/service_package.routes')); // Route mới
