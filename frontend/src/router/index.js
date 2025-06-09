@@ -7,6 +7,7 @@ import RegisterPage from '../views/RegisterPage.vue'
 import ForgotPasswordPage from '../views/ForgotPasswordPage.vue'
 import ProfilePage from '../views/ProfilePage.vue'
 import ChangePasswordPage from '../views/ChangePasswordPage.vue'
+import TenantPage from '../views/TenantPage.vue'
 
 const routes = [
   {
@@ -35,6 +36,7 @@ const routes = [
       { path: 'about', name: 'About', component: AboutPage },
       { path: 'profile', name: 'Profile', component: ProfilePage },
       { path: 'change-password', name: 'ChangePassword', component: ChangePasswordPage },
+      { path: 'tenant', name: 'Tenant', component: TenantPage },
     ]
   }
 ]

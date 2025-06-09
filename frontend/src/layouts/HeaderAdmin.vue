@@ -19,9 +19,9 @@
         Quản lý sản phẩm
       </RouterLink>
 
-      <RouterLink to="/categories" :class="navClass('/categories')">
+      <RouterLink to="/tenant" :class="navClass('/tenant')">
         <FolderKanban class="tw-w-4 tw-h-4 tw-text-yellow-500" />
-        Quản lý danh mục
+        Tenant
       </RouterLink>
 
       <RouterLink to="/orders" :class="navClass('/orders')">

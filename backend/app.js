@@ -2,9 +2,11 @@ const express = require('express');
 const { Sequelize } = require('sequelize');
 const sequelize = require('./config/database'); // Giả định file cấu hình Sequelize
 const { createClient } = require('redis');
+const cors = require('cors');
 
 const app = express();
 
+app.use(cors());
 // Tạo client Redis
 const redisClient = createClient();
 redisClient.on('error', (err) => console.error('Redis error:', err));
