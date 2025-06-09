@@ -15,8 +15,5 @@ http://localhost:3000/api/test
 http://localhost:9001
 ```
 
-<<<<<<< HEAD
 #086df9
-=======
 npm install redis
->>>>>>> 094cbb4fca6ba73698a80ae9e646650945284ac8
