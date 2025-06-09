@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/user.controller');
 
+// Thêm route đăng nhập
+router.post('/login', controller.login);
+
 // Thêm route đăng ký
 router.post('/register', controller.register);
 

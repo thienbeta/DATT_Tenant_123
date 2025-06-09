@@ -1,5 +1,6 @@
 const { User, Tenant } = require('../models'); // Need to import Tenant model
 const bcrypt = require('bcrypt'); // Missing bcrypt import
+const jwt = require('jsonwebtoken');
 
 // GET /users
 exports.getAll = async (req, res) => {
@@ -119,6 +120,57 @@ exports.register = async (req, res) => {
     res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error('Registration error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email và mật khẩu là bắt buộc' });
+    }
+
+    // Tìm user theo email
+    const user = await User.findOne({ 
+      where: { email },
+      include: [{ model: Tenant, as: 'tenant' }]
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
+    }
+
+    // Kiểm tra mật khẩu
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
+    }
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      { 
+        user_id: user.user_id,
+        email: user.email,
+        role: user.role,
+        tenant_id: user.tenant_id
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(200).json({
+      token,
+      user: {
+        user_id: user.user_id,
+        email: user.email,
+        role: user.role,
+        tenant_id: user.tenant_id,
+        tenant: user.tenant
+      }
+    });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
