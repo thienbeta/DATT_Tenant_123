@@ -15,5 +15,20 @@ http://localhost:3000/api/test
 http://localhost:9001
 ```
 
+### Backend
+```bash
+npm i
+npm install bcrypt 
+npm install bcrypt cors
+
+```
+
+### Frontend
+```bash
+npm i
+npm install axios
+npm install dotenv
+```
+
 #086df9
 npm install redis
