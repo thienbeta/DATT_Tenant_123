@@ -5,6 +5,26 @@
 
       <div class="tw-space-y-4">
         <div>
+          <label class="tw-block tw-text-gray-700 dark:tw-text-gray-300">Họ và tên</label>
+          <input
+            v-model="form.fullName"
+            type="text"
+            placeholder="Nguyễn Văn A"
+            class="tw-w-full tw-border tw-rounded tw-px-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
+          />
+        </div>
+
+        <div>
+          <label class="tw-block tw-text-gray-700 dark:tw-text-gray-300">Số điện thoại</label>
+          <input
+            v-model="form.phoneNumber"
+            type="tel"
+            placeholder="0123456789"
+            class="tw-w-full tw-border tw-rounded tw-px-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
+          />
+        </div>
+
+        <div>
           <label class="tw-block tw-text-gray-700 dark:tw-text-gray-300">Email</label>
           <input
             v-model="form.email"
@@ -70,6 +90,8 @@ const router = useRouter()
 const loading = ref(false)
 
 const form = ref({
+  fullName: '',
+  phoneNumber: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -78,7 +100,8 @@ const form = ref({
 
 const handleSubmit = async () => {
   try {
-    if (!form.value.email || !form.value.password || !form.value.confirmPassword || !form.value.tenantName) {
+    if (!form.value.email || !form.value.password || !form.value.confirmPassword || 
+        !form.value.fullName || !form.value.phoneNumber) {
       alert('Vui lòng điền đầy đủ thông tin.')
       return
     }
@@ -91,6 +114,8 @@ const handleSubmit = async () => {
     loading.value = true
 
     const response = await axios.post('http://localhost:3000/api/users/register', {
+      full_name: form.value.fullName,
+      phone_number: form.value.phoneNumber,
       email: form.value.email,
       password: form.value.password,
       tenant_name: form.value.tenantName
@@ -102,7 +127,7 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Lỗi đăng ký:', error)
-    alert(error.response?.data?.error || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.')
+    alert(error.response?.data?.error || 'Có lỗi xảy ra khi đăng ký')
   } finally {
     loading.value = false
   }
