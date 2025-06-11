@@ -27,6 +27,7 @@ db.sequelize = sequelize;
 // Import các model
 db.Tenant = require('./models/tenant.model')(sequelize, Sequelize);
 db.User = require('./models/user.model')(sequelize, Sequelize);
+db.CategoryPackage = require('./models/category_package.model')(sequelize, Sequelize);
 db.ServicePackage = require('./models/service_package.model')(sequelize, Sequelize);
 db.TenantOfferedPackage = require('./models/tenant_offered_package.model')(sequelize, Sequelize);
 db.UserPurchase = require('./models/user_purchase.model')(sequelize, Sequelize);
@@ -46,6 +47,7 @@ app.use('/api/service-packages', require('./routes/service_package.routes')); //
 app.use('/api/tenant-offered-packages', require('./routes/tenant_offered_package.routes')); // Route mới
 app.use('/api/user-purchases', require('./routes/user_purchase.routes')); // Route mới
 app.use('/api/service-data', require('./routes/service_data.routes')); // Route mới
+app.use('/api/categories', require('./routes/category_package.routes')); // Route mới
 
 // Đồng bộ cơ sở dữ liệu và khởi động server
 db.sequelize.sync({ force: false }).then(() => {

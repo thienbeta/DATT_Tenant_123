@@ -1,4 +1,4 @@
-const { ServicePackage } = require('../models');
+const { ServicePackage, CategoryPackage } = require('../models');
 const { Sequelize } = require('sequelize');
 const { body, param, query, validationResult } = require('express-validator');
 
@@ -20,6 +20,10 @@ const validateServicePackage = [
     .withMessage('Price is required')
     .isFloat({ min: 0 })
     .withMessage('Price must be a non-negative number'),
+  body('billing_cycle')
+    .optional()
+    .isIn(['monthly', 'quarterly', 'yearly', 'one-time', 'indefinite'])
+    .withMessage('Billing cycle must be one of: monthly, quarterly, yearly, one-time, indefinite'),
   body('package_type')
     .notEmpty()
     .withMessage('Package type is required')
@@ -50,6 +54,10 @@ const validateServicePackage = [
     .optional()
     .isIn(['active', 'inactive', 'deleted'])
     .withMessage('Status must be one of: active, inactive, deleted'),
+  body('category_id')
+    .optional({ nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('Category ID must be a positive integer')
 ];
 
 // Validation middleware for ID parameter
@@ -73,6 +81,10 @@ const validateQueryParams = [
     .optional()
     .isIn(['active', 'inactive', 'deleted'])
     .withMessage('Status must be one of: active, inactive, deleted'),
+  query('category_id')
+    .optional( { nullable: true })
+    .isInt({ min: 1 })
+    .withMessage('Category ID must be a positive integer'),
 ];
 
 // Middleware to handle validation errors
@@ -97,6 +109,7 @@ exports.createServicePackage = [
         name,
         description,
         price,
+        billing_cycle,
         package_type,
         service_type,
         file_storage_limit,
@@ -104,7 +117,19 @@ exports.createServicePackage = [
         database_limit,
         api_call_limit,
         status,
+        category_id,
+        created_at = new Date(),
       } = req.body;
+
+      // Validate category exists if category_id is provided
+      if (category_id) {
+        const category = await CategoryPackage.findByPk(category_id);
+        if (!category) {
+          return res.status(400).json({
+            message: 'Invalid category ID',
+          });
+        }
+      }
 
       // 🔍 Check for duplicate limits
       const existingPackage = await ServicePackage.findOne({
@@ -126,6 +151,7 @@ exports.createServicePackage = [
         name,
         description,
         price,
+        billing_cycle,
         package_type,
         service_type,
         file_storage_limit,
@@ -133,6 +159,8 @@ exports.createServicePackage = [
         database_limit,
         api_call_limit,
         status,
+        category_id,
+        created_at: new Date(created_at),
       });
 
       return res.status(201).json({
@@ -154,20 +182,18 @@ exports.getAllServicePackages = [
   handleValidationErrors,
   async (req, res) => {
     try {
-      const { package_type, service_type, status } = req.query;
+      const { package_type, service_type, status, category_id } = req.query;
       const where = {};
 
       if (package_type) where.package_type = package_type;
       if (service_type) where.service_type = service_type;
       if (status) where.status = status;
+      if (category_id) where.category_id = category_id;
 
       const servicePackages = await ServicePackage.findAll({
         where,
-        attributes: {
-          exclude: ['created_at'], // Exclude created_at if not needed
-        },
-        order: [['created_at', 'DESC']], // Order by created_at descending
-        
+        include: [{ model: CategoryPackage, as: 'category' }], // Include category details
+        order: [['created_at', 'DESC']],
       });
 
       return res.status(200).json({
@@ -192,9 +218,7 @@ exports.getServicePackageById = [
       const { id } = req.params;
 
       const servicePackage = await ServicePackage.findByPk(id, {
-        attributes: {
-          exclude: ['created_at'], // Exclude created_at if not needed
-        },
+        include: [{ model: CategoryPackage, as: 'category' }], // Include category details
       });
 
       if (!servicePackage) {
@@ -228,6 +252,7 @@ exports.updateServicePackage = [
         name,
         description,
         price,
+        billing_cycle,
         package_type,
         service_type,
         file_storage_limit,
@@ -235,6 +260,7 @@ exports.updateServicePackage = [
         database_limit,
         api_call_limit,
         status,
+        category_id,
       } = req.body;
 
       const servicePackage = await ServicePackage.findByPk(id);
@@ -245,10 +271,21 @@ exports.updateServicePackage = [
         });
       }
 
+      // Validate category exists if category_id is provided
+      if (category_id) {
+        const category = await CategoryPackage.findByPk(category_id);
+        if (!category) {
+          return res.status(400).json({
+            message: 'Invalid category ID',
+          });
+        }
+      }
+
       await servicePackage.update({
         name,
         description,
         price,
+        billing_cycle,
         package_type,
         service_type,
         file_storage_limit,
@@ -256,6 +293,7 @@ exports.updateServicePackage = [
         database_limit,
         api_call_limit,
         status,
+        category_id,
       });
 
       return res.status(200).json({

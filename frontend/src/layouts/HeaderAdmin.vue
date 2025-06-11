@@ -14,7 +14,12 @@
         Tổng quan
       </RouterLink>
 
-      <RouterLink to="/products" :class="navClass('/products')">
+      <RouterLink to="/categories" :class="navClass('/categories')">
+        <FolderKanban class="tw-w-4 tw-h-4 tw-text-orange-500" />
+        Quản lý danh mục
+      </RouterLink>
+
+      <RouterLink to="/package" :class="navClass('/package')">
         <Boxes class="tw-w-4 tw-h-4 tw-text-green-600" />
         Quản lý sản phẩm
       </RouterLink>
@@ -42,6 +47,11 @@
       <RouterLink to="/promotions" :class="navClass('/promotions')">
         <Gift class="tw-w-4 tw-h-4 tw-text-pink-500" />
         Khuyến mãi
+      </RouterLink>
+
+      <RouterLink to="/shop" :class="navClass('/shop')">
+        <Store class="tw-w-4 tw-h-4 tw-text-blue-500" />
+        Cửa hàng
       </RouterLink>
 
       <RouterLink to="/reports" :class="navClass('/reports')">
@@ -92,7 +102,8 @@ import {
   BarChart2,
   Settings,
   User,
-  LogOut
+  LogOut,
+  Store
 } from 'lucide-vue-next'
 
 const route = useRoute()
