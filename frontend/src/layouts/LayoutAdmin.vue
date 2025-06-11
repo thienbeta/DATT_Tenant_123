@@ -43,9 +43,13 @@
               <RouterLink to="/change-password" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 hover:tw-bg-gray-100 dark:hover:tw-bg-gray-700 dark:tw-text-gray-200">
                 <Settings class="tw-w-4 tw-h-4" /> Đổi mật khẩu
               </RouterLink>
-              <RouterLink to="/logout" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-red-600 hover:tw-bg-gray-100 dark:hover:tw-bg-gray-700">
+              <a 
+                href="#" 
+                @click.prevent="handleLogout" 
+                class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-red-600 hover:tw-bg-gray-100 dark:hover:tw-bg-gray-700 tw-cursor-pointer"
+              >
                 <LogOut class="tw-w-4 tw-h-4" /> Đăng xuất
-              </RouterLink>
+              </a>
             </div>
           </div>
         </div>
@@ -64,10 +68,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import HeaderAdmin from './HeaderAdmin.vue'
 import FooterAdmin from './FooterAdmin.vue'
 import { User, LogOut, Search, Settings, Sun, Moon } from 'lucide-vue-next'
 
+const router = useRouter()
 const dropdownOpen = ref(false)
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
@@ -79,6 +85,20 @@ const toggleDarkMode = () => {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle('dark', isDark.value)
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+const handleLogout = () => {
+  // Xóa token và thông tin user khỏi storage
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  sessionStorage.removeItem('token')
+  sessionStorage.removeItem('user')
+  
+  // Đóng dropdown
+  dropdownOpen.value = false
+  
+  // Chuyển hướng về trang đăng nhập
+  router.push('/login')
 }
 
 onMounted(() => {

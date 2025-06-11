@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/user.controller');
 
+// Thêm route đăng nhập
+router.post('/login', controller.login);
+
+// Thêm route đăng ký
+router.post('/register', controller.register);
+
 router.get('/', controller.getAll);                  // GET all users
 router.get('/:id', controller.getById);              // GET user by ID
 router.post('/', controller.create);                 // POST new user
