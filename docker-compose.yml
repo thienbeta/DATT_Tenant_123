@@ -28,6 +28,26 @@ services:
       timeout: 10s
       retries: 5
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+    mem_limit: 256m
+    cpus: 0.25
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   minio:
     image: minio/minio
     container_name: minio_container
@@ -62,7 +82,6 @@ services:
       - "6379:6379"
     networks:
       - app-network
-
 
   backend:
     build:
