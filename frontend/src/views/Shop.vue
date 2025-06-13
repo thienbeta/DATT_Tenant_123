@@ -405,9 +405,16 @@ const formatPrice = (price) => {
 };
 
 const formatStorage = (bytes) => {
-  if (bytes === 0) return 'Không giới hạn';
+  const numericBytes = Number(bytes);
+
+  if (isNaN(numericBytes) || numericBytes < 0) {
+    return 'Dữ liệu không hợp lệ';
+  }
+
+  if (numericBytes === 0) return 'Không giới hạn';
+
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let size = bytes;
+  let size = numericBytes;
   let unitIndex = 0;
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024;
@@ -415,6 +422,7 @@ const formatStorage = (bytes) => {
   }
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 };
+
 
 const processPayment = async () => {
   if (paymentMethod.value === 'paypal') {
