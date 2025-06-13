@@ -7,6 +7,8 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+
+
 // Đọc tất cả các model file trừ index.js
 fs.readdirSync(__dirname)
   .filter((file) => file !== 'index.js' && file.endsWith('.js'))

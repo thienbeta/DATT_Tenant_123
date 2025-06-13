@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getAll, getById, create, sendInvoiceEmail } = require('../controllers/user_purchase.controller');
+const userPurchaseController = require('../controllers/user_purchase.controller');
 
-router.get('/', getAll);
-router.get('/:id', getById);
-router.post('/', create);
-router.get('/invoice/:purchaseId', sendInvoiceEmail);
+router.get('/', userPurchaseController.getAll);
+router.get('/:id', userPurchaseController.getById);
+router.post('/', userPurchaseController.create);
+router.get('/invoice/:purchaseId', userPurchaseController.sendInvoiceEmail);
+router.get('/paypal/success', userPurchaseController.paypalSuccess);
+router.post('/paypal/success', userPurchaseController.paypalSuccess); // Giữ POST để tương thích
+router.post('/paypal/create', userPurchaseController.createPayPalOrder);
+router.post('/paypal/cancel', userPurchaseController.paypalCancel);
 
 module.exports = router;
