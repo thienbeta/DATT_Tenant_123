@@ -27,10 +27,9 @@
             <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Danh mục</th>
             <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Giá</th>
             <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Loại gói</th>
-            <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Loại dịch vụ</th>
             <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Chu kỳ</th>
             <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Ngày tạo</th>
-            <th class="tw-text-left tw-px tw-py-2 dark:tw-text-white">Trạng thái</th>
+            <th class="tw-text-left tw-px-4 tw-py-2 dark:tw-text-white">Trạng thái</th>
             <th class="tw-text-center tw-px-4 tw-py-2 dark:tw-text-white">Thao tác</th>
           </tr>
         </thead>
@@ -50,7 +49,6 @@
                 servicePackage.package_type === 'vip_pro' ? 'VIP Pro' :
                 servicePackage.package_type === 'enterprise' ? 'Doanh nghiệp' : '' }}
             </td>
-            <td class="tw-px-4 tw-py-2">{{ servicePackage.service_type }}</td>
             <td class="tw-px-4 tw-py-2">
               {{ servicePackage.billing_cycle === 'monthly' ? 'Hàng tháng' :
                 servicePackage.billing_cycle === 'quarterly' ? 'Hàng quý' :
@@ -196,22 +194,8 @@
               </select>
             </div>
           </div>
-          <div class="tw-relative">
-            <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Giá (USD)</label>
-            <div class="tw-relative">
-              <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
-                <DollarSign class="tw-w-4 tw-h-4 tw-text-[#086df9]" />
-              </span>
-              <input
-                type="number"
-                step="0.01"
-                :disabled="modal.mode === 'view'"
-                v-model="modal.servicePackage.price"
-                class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
-              />
-            </div>
-          </div>
-          <div class="tw-relative">
+          
+                    <div class="tw-relative">
             <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Loại gói</label>
             <div class="tw-relative">
               <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
@@ -222,31 +206,29 @@
                 :disabled="modal.mode === 'view'"
                 class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
               >
-                <option value="free">Free</option>
+                <option value="free">Miễn phí</option>
                 <option value="pro">Pro</option>
                 <option value="vip_pro">VIP Pro</option>
-                <option value="enterprise">Enterprise</option>
+                <option value="enterprise">Doanh nghiệp</option>
               </select>
             </div>
           </div>
           <div class="tw-relative">
-            <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Loại dịch vụ</label>
+            <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Giá (USD)</label>
             <div class="tw-relative">
               <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
-                <Server class="tw-w-4 tw-h-4 tw-text-[#086df9]" />
+                <DollarSign class="tw-w-4 tw-h-4 tw-text-[#086df9]" />
               </span>
-              <select
-                v-model="modal.servicePackage.service_type"
-                :disabled="modal.mode === 'view'"
+              <input
+                type="number"
+                step="0.01"
+                :disabled="modal.mode === 'view' || modal.servicePackage.package_type === 'free'"
+                v-model="modal.servicePackage.price"
                 class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
-              >
-                <option value="crm">CRM</option>
-                <option value="storage">Storage</option>
-                <option value="communication">Communication</option>
-                <option value="database">Database</option>
-              </select>
+              />
             </div>
           </div>
+
           <div class="tw-relative">
             <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Chu kỳ thanh toán</label>
             <div class="tw-relative">
@@ -278,50 +260,6 @@
                 v-model="modal.servicePackage.file_storage_limit"
                 class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
                 @input="convertToBytes('file_storage_limit')"
-              />
-            </div>
-          </div>
-          <div class="tw-relative">
-            <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Giới hạn băng thông (GB)</label>
-            <div class="tw-relative">
-              <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
-                <Network class="tw-w-4 tw-h-4 tw-text-[#086df9]" />
-              </span>
-              <input
-                type="number"
-                :disabled="modal.mode === 'view'"
-                v-model="modal.servicePackage.bandwidth_limit"
-                class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
-                @input="convertToBytes('bandwidth_limit')"
-              />
-            </div>
-          </div>
-          <div class="tw-relative">
-            <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Giới hạn cơ sở dữ liệu (GB)</label>
-            <div class="tw-relative">
-              <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
-                <Database class="tw-w-4 tw-h-4 tw-text-[#086df9]" />
-              </span>
-              <input
-                type="number"
-                :disabled="modal.mode === 'view'"
-                v-model="modal.servicePackage.database_limit"
-                class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
-                @input="convertToBytes('database_limit')"
-              />
-            </div>
-          </div>
-          <div class="tw-relative">
-            <label class="tw-block tw-text-sm tw-text-gray-600 dark:tw-text-gray-300 tw-mb-1">Giới hạn API Call</label>
-            <div class="tw-relative">
-              <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
-                <Code class="tw-w-4 tw-h-4 tw-text-[#086df9]" />
-              </span>
-              <input
-                type="number"
-                :disabled="modal.mode === 'view'"
-                v-model="modal.servicePackage.api_call_limit"
-                class="tw-w-full tw-border tw-border-[#086df9] tw-rounded tw-pl-10 tw-pr-3 tw-py-2 dark:tw-bg-gray-700 dark:tw-text-white"
               />
             </div>
           </div>
@@ -386,7 +324,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import Swal from 'sweetalert2';
 import {
   Eye,
@@ -404,11 +342,7 @@ import {
   RefreshCcw,
   DollarSign,
   Package,
-  Server,
   HardDrive,
-  Network,
-  Database,
-  Code,
   Plus,
   Clock,
   Folder,
@@ -420,15 +354,13 @@ interface ServicePackage {
   description?: string;
   price: number;
   package_type: 'free' | 'pro' | 'vip_pro' | 'enterprise';
-  service_type: 'crm' | 'storage' | 'communication' | 'database';
   file_storage_limit?: number;
-  bandwidth_limit?: number;
-  database_limit?: number;
-  api_call_limit?: number;
+  start_date?: string | null;
+  end_date?: string | null;
   status: 'active' | 'inactive' | 'deleted';
   created_at?: string;
   billing_cycle?: 'monthly' | 'quarterly' | 'yearly' | 'one-time' | 'indefinite';
-  category_id?: number; // Thêm trường category_id
+  category_id?: number;
 }
 
 interface Category {
@@ -500,9 +432,9 @@ const openModal = (mode: 'view' | 'edit', servicePackage: ServicePackage) => {
     mode,
     servicePackage: {
       ...servicePackage,
-      file_storage_limit: servicePackage.file_storage_limit ? servicePackage.file_storage_limit / 1024 / 1024 / 1024 : 0,
-      bandwidth_limit: servicePackage.bandwidth_limit ? servicePackage.bandwidth_limit / 1024 / 1024 / 1024 : 0,
-      database_limit: servicePackage.database_limit ? servicePackage.database_limit / 1024 / 1024 / 1024 : 0,
+      file_storage_limit: servicePackage.file_storage_limit,
+      start_date: null,
+      end_date: null,
     },
   };
 };
@@ -516,14 +448,12 @@ const openCreateModal = () => {
       description: '',
       price: 0,
       package_type: 'free',
-      service_type: 'crm',
       file_storage_limit: 0,
-      bandwidth_limit: 0,
-      database_limit: 0,
-      api_call_limit: 0,
+      start_date: null,
+      end_date: null,
       status: 'active',
       billing_cycle: 'indefinite',
-      category_id: null, // Thêm category_id mặc định
+      category_id: null,
     },
   };
 };
@@ -532,10 +462,17 @@ const closeModal = () => {
   modal.value.open = false;
 };
 
-const convertToBytes = (field: 'file_storage_limit' | 'bandwidth_limit' | 'database_limit') => {
+const convertToBytes = (field: 'file_storage_limit') => {
   const value = modal.value.servicePackage[field];
-  modal.value.servicePackage[field] = value ? value * 1024 * 1024 * 1024 : 0;
+  modal.value.servicePackage[field] = value;
 };
+
+// Theo dõi thay đổi package_type để điều chỉnh giá
+watch(() => modal.value.servicePackage.package_type, (newType) => {
+  if (newType === 'free') {
+    modal.value.servicePackage.price = 0;
+  }
+});
 
 const fetchServicePackages = async () => {
   try {
