@@ -28,33 +28,22 @@
         allowNull: false,
         defaultValue: 'free',
       },
-      service_type: {
-        type: DataTypes.ENUM('crm', 'storage', 'communication', 'database'),
-        allowNull: false,
-      },
       file_storage_limit: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: true,
         defaultValue: 0, // 0 = unlimited
       },
-      bandwidth_limit: {
-        type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: true,
-        defaultValue: 0,
-      },
-      database_limit: {
-        type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: true,
-        defaultValue: 0,
-      },
-      api_call_limit: {
-        type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: true,
-        defaultValue: 0,
-      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
+      },
+      start_date: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      end_date: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
       status: {
         type: DataTypes.ENUM('active', 'inactive', 'deleted'),
