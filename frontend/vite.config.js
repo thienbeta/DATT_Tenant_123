@@ -1,11 +1,12 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: true,
-    port: 5173
-  }
-})
+    host: '0.0.0.0', // Cho phép truy cập từ mọi địa chỉ
+    port: 5173,      // Đảm bảo chạy trên cổng 5127
+    open: true,      // Mở trình duyệt tự động
+    historyApiFallback: true, // Xử lý SPA route
+  },
+});

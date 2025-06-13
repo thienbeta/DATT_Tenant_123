@@ -22,6 +22,37 @@ exports.getById = async (req, res) => {
   }
 };
 
+exports.getCurrentUser = async (req, res) => {
+  try {
+    console.log('getCurrentUser called, req.user:', req.user);
+    
+    if (!req.user) {
+      console.log('No req.user found');
+      return res.status(401).json({ error: 'Không tìm thấy thông tin người dùng' });
+    }
+
+    // Lấy thông tin user mới nhất từ database
+    const user = await User.findByPk(req.user.user_id);
+    if (!user) {
+      console.log('User not found in database:', req.user.user_id);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const response = {
+      user_id: user.user_id,
+      email: user.email,
+      role: user.role,
+      tenant_id: user.tenant_id,
+      full_name: user.full_name,
+    };
+
+    console.log('Returning user info:', response);
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error in getCurrentUser:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
 // POST /users
 exports.create = async (req, res) => {
   try {
