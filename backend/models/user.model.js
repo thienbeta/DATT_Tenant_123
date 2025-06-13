@@ -10,6 +10,14 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       allowNull: false,
     },
+    full_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    phone_number: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     password_hash: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -22,7 +30,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
     },
-    
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'deleted'),
       defaultValue: 'active',

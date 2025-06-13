@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/user_purchase.controller');
+const { getAll, getById, create, sendInvoiceEmail } = require('../controllers/user_purchase.controller');
 
-router.get('/', controller.getAll);
-router.get('/:id', controller.getById);
-router.post('/', controller.create);
-router.put('/:id', controller.update);
-router.delete('/:id', controller.delete);
+router.get('/', getAll);
+router.get('/:id', getById);
+router.post('/', create);
+router.get('/invoice/:purchaseId', sendInvoiceEmail);
 
 module.exports = router;

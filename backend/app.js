@@ -2,6 +2,7 @@ const express = require('express');
 const { Sequelize } = require('sequelize');
 const sequelize = require('./config/database'); // Giả định file cấu hình Sequelize
 const { createClient } = require('redis');
+const userPurchaseRoutes = require('./routes/user_purchase.routes');
 const cors = require('cors');
 
 const app = express();
@@ -13,10 +14,15 @@ redisClient.on('error', (err) => console.error('Redis error:', err));
 
 // Middleware để xử lý JSON
 app.use(express.json());
+
 // Kết nối Redis
 (async () => {
-  await redisClient.connect();
-  console.log('✅ Đã kết nối Redis');
+  try {
+    await redisClient.connect();
+    console.log('✅ Đã kết nối Redis');
+  } catch (error) {
+    console.error('Lỗi kết nối Redis:', error);
+  }
 })();
 
 // Khởi tạo object db để chứa các model
@@ -32,6 +38,7 @@ db.ServicePackage = require('./models/service_package.model')(sequelize, Sequeli
 db.TenantOfferedPackage = require('./models/tenant_offered_package.model')(sequelize, Sequelize);
 db.UserPurchase = require('./models/user_purchase.model')(sequelize, Sequelize);
 db.ServiceData = require('./models/service_data.model')(sequelize, Sequelize);
+app.use('/api/user-purchases', userPurchaseRoutes);
 
 // Định nghĩa các mối quan hệ
 Object.values(db).forEach(model => {
@@ -53,4 +60,6 @@ app.use('/api/categories', require('./routes/category_package.routes')); // Rout
 db.sequelize.sync({ force: false }).then(() => {
   console.log('Database synced.');
   app.listen(3000, () => console.log('Server running on port 3000'));
+}).catch(error => {
+  console.error('Lỗi đồng bộ cơ sở dữ liệu:', error);
 });

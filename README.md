@@ -20,6 +20,7 @@ http://localhost:9001
 npm i
 npm install bcrypt 
 npm install bcrypt cors
+npm install ioredis
 
 ###CHẠY XONG LỆNH NÀY NHỚ COPPY KEY DÁN VÀO FILE .ENV
 node -e "console.log('JWT_SECRET=' + require('crypto').randomBytes(32).toString('base64'))"
