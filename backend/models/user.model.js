@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING,
-      unique: true,
+      // unique: true, // Đã bỏ ràng buộc unique
       allowNull: false,
     },
     full_name: {
@@ -60,3 +60,4 @@ module.exports = (sequelize, DataTypes) => {
 
   return User;
 };
+

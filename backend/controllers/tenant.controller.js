@@ -2,12 +2,32 @@ const { Tenant, User } = require('../models');
 
 exports.getAll = async (req, res) => {
   try {
-    const tenants = await Tenant.findAll({
-      include: [
-        { model: User, as: 'adminUser', attributes: ['user_id', 'email'] }
-      ]
-    });
-    res.status(200).json(tenants);
+    // Lấy tenant_id từ user đã xác thực
+    const tenant_id = req.user?.tenant_id;
+    
+    // Nếu là super_admin, trả về tất cả tenant
+    if (req.user?.role === 'super_admin') {
+      const tenants = await Tenant.findAll({
+        include: [
+          { model: User, as: 'adminUser', attributes: ['user_id', 'email'] }
+        ]
+      });
+      return res.status(200).json(tenants);
+    }
+    
+    // Nếu là tenant_admin, chỉ trả về tenant của họ
+    if (tenant_id) {
+      const tenants = await Tenant.findAll({
+        where: { tenant_id },
+        include: [
+          { model: User, as: 'adminUser', attributes: ['user_id', 'email'] }
+        ]
+      });
+      return res.status(200).json(tenants);
+    }
+    
+    // Nếu không có tenant_id, trả về mảng rỗng
+    return res.status(200).json([]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

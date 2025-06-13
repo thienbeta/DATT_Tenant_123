@@ -3,30 +3,29 @@
     <h1 class="tw-text-3xl tw-font-semibold tw-mb-6 tw-text-gray-800 dark:tw-text-white">Quản lý Tenant</h1>
 
     <!-- Thanh điều hướng -->
-<div class="tw-flex tw-gap-4 tw-mb-6">
-  <button
-    @click="currentTab = 'list'"
-    :class="{
-      'tw-bg-[#086df9] tw-text-white': currentTab === 'list',
-      'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'list'
-    }"
-    class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
-  >
-    <List class="tw-w-5 tw-h-5" /> Danh sách Tenant
-  </button>
+    <div class="tw-flex tw-gap-4 tw-mb-6">
+      <button
+        @click="currentTab = 'list'"
+        :class="{
+          'tw-bg-[#086df9] tw-text-white': currentTab === 'list',
+          'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'list'
+        }"
+        class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
+      >
+        <List class="tw-w-5 tw-h-5" /> Danh sách Tenant
+      </button>
 
-  <button
-    @click="currentTab = 'restore'"
-    :class="{
-      'tw-bg-[#086df9] tw-text-white': currentTab === 'restore',
-      'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'restore'
-    }"
-    class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
-  >
-    <Recycle class="tw-w-5 tw-h-5" /> Khôi phục
-  </button>
-</div>
-
+      <button
+        @click="currentTab = 'restore'"
+        :class="{
+          'tw-bg-[#086df9] tw-text-white': currentTab === 'restore',
+          'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'restore'
+        }"
+        class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
+      >
+        <Recycle class="tw-w-5 tw-h-5" /> Khôi phục
+      </button>
+    </div>
 
     <!-- Tìm kiếm và bộ lọc -->
     <div class="tw-mb-6 tw-flex tw-gap-4 tw-items-center">
@@ -56,63 +55,111 @@
       </select>
     </div>
 
-    <!-- Bảng hiển thị tenants -->
-    <div class="tw-overflow-x-auto tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg">
-      <table class="tw-min-w-full tw-table-auto">
-        <thead class="tw-bg-gray-100 dark:tw-bg-gray-700">
-          <tr>
-            <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">ID</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Tên doanh nghiệp</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Admin Email</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Ngày tạo</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Trạng thái</th>
-            <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="tenant in paginatedTenants"
-            :key="tenant.tenant_id"
-            class="tw-border-b dark:tw-border-gray-700 tw-transition tw-duration-200 hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700"
-          >
-            <td class="tw-px-6 tw-py-4 tw-text-center tw-text-gray-700 dark:tw-text-gray-300">{{ tenant.tenant_id }}</td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ tenant.name }}</td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ tenant.adminUser?.email || '—' }}</td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
-              {{ new Date(tenant.created_at || '').toLocaleDateString('vi-VN') }}
-            </td>
-            <td class="tw-px-6 tw-py-4">
-              <span
-                :class="[
-                  'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
-                  tenant.status === 'active' ? 'tw-bg-green-100 tw-text-green-700' :
-                  tenant.status === 'inactive' ? 'tw-bg-yellow-100 tw-text-yellow-700' :
-                  'tw-bg-red-100 tw-text-red-700'
-                ]"
-              >
-                {{ tenant.status === 'active' ? 'Hoạt động' : tenant.status === 'inactive' ? 'Tạm dừng' : 'Đã xóa' }}
-              </span>
-            </td>
-            <td class="tw-px-6 tw-py-4 tw-text-center tw-flex tw-justify-center tw-gap-2">
-              <button @click="openModal('view', tenant)" class="tw-text-green-600 hover:tw-text-green-800 tw-transition">
-                <Eye class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'list'" @click="openModal('edit', tenant)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
-                <Edit class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'list'" @click="moveToTrash(tenant)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
-                <Trash2 class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'restore'" @click="restoreTenant(tenant)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
-                <RefreshCcw class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'restore'" @click="permanentlyDelete(tenant)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
-                <Trash2 class="tw-w-5 tw-h-5" />
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Danh sách Tenant và Thống kê -->
+    <div v-for="tenant in paginatedTenants" :key="tenant.tenant_id" class="tw-mb-6">
+      <!-- Thống kê người dùng -->
+      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-4 tw-gap-4 tw-mb-4">
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Tổng số người dùng</p>
+              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
+                {{ tenantStats[tenant.tenant_id]?.totalUsers || 0 }}
+              </h3>
+            </div>
+            <div class="tw-p-3 tw-bg-blue-100 dark:tw-bg-blue-900 tw-rounded-full">
+              <Users class="tw-w-6 tw-h-6 tw-text-blue-600 dark:tw-text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Người dùng mới (7 ngày)</p>
+              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
+                {{ tenantStats[tenant.tenant_id]?.recentUsers || 0 }}
+              </h3>
+            </div>
+            <div class="tw-p-3 tw-bg-green-100 dark:tw-bg-green-900 tw-rounded-full">
+              <UserPlus class="tw-w-6 tw-h-6 tw-text-green-600 dark:tw-text-green-400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Người dùng theo vai trò</p>
+              <div class="tw-mt-2">
+                <div v-for="(count, role) in tenantStats[tenant.tenant_id]?.usersByRole || {}" :key="role" class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+                  <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">{{ formatRole(role) }}</span>
+                  <span class="tw-font-semibold tw-text-gray-800 dark:tw-text-white">{{ count }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="tw-p-3 tw-bg-purple-100 dark:tw-bg-purple-900 tw-rounded-full">
+              <UserCog class="tw-w-6 tw-h-6 tw-text-purple-600 dark:tw-text-purple-400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Trạng thái người dùng</p>
+              <div class="tw-mt-2">
+                <div v-for="(count, status) in tenantStats[tenant.tenant_id]?.usersByStatus || {}" :key="status" class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+                  <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">{{ formatStatus(status) }}</span>
+                  <span class="tw-font-semibold tw-text-gray-800 dark:tw-text-white">{{ count }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="tw-p-3 tw-bg-yellow-100 dark:tw-bg-yellow-900 tw-rounded-full">
+              <Activity class="tw-w-6 tw-h-6 tw-text-yellow-600 dark:tw-text-yellow-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thông tin Tenant -->
+      <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+        <div class="tw-flex tw-justify-between tw-items-center">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div>
+              <h3 class="tw-text-lg tw-font-semibold tw-text-gray-800 dark:tw-text-white">{{ tenant.name }}</h3>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">{{ tenant.adminUser?.email || '—' }}</p>
+            </div>
+            <span
+              :class="[
+                'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
+                tenant.status === 'active' ? 'tw-bg-green-100 tw-text-green-700' :
+                tenant.status === 'inactive' ? 'tw-bg-yellow-100 tw-text-yellow-700' :
+                'tw-bg-red-100 tw-text-red-700'
+              ]"
+            >
+              {{ tenant.status === 'active' ? 'Hoạt động' : tenant.status === 'inactive' ? 'Tạm dừng' : 'Đã xóa' }}
+            </span>
+          </div>
+          <div class="tw-flex tw-gap-2">
+            <button @click="openModal('view', tenant)" class="tw-text-green-600 hover:tw-text-green-800 tw-transition">
+              <Eye class="tw-w-5 tw-h-5" />
+            </button>
+            <button v-if="currentTab === 'list'" @click="openModal('edit', tenant)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
+              <Edit class="tw-w-5 tw-h-5" />
+            </button>
+            <button v-if="currentTab === 'list'" @click="moveToTrash(tenant)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
+              <Trash2 class="tw-w-5 tw-h-5" />
+            </button>
+            <button v-if="currentTab === 'restore'" @click="restoreTenant(tenant)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
+              <RefreshCcw class="tw-w-5 tw-h-5" />
+            </button>
+            <button v-if="currentTab === 'restore'" @click="permanentlyDelete(tenant)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
+              <Trash2 class="tw-w-5 tw-h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Phân trang -->
@@ -270,6 +317,9 @@ import {
   Search,
   List,
   Recycle,
+  Users,
+  UserPlus,
+  UserCog,
 } from 'lucide-vue-next'
 
 interface AdminUser {
@@ -285,7 +335,15 @@ interface Tenant {
   created_at?: string
 }
 
+interface UserStatistics {
+  totalUsers: number;
+  usersByRole: Record<string, number>;
+  usersByStatus: Record<string, number>;
+  recentUsers: number;
+}
+
 const tenants = ref<Tenant[]>([])
+const tenantStats = ref<Record<number, UserStatistics>>({})
 const modal = ref<{ open: boolean; mode: 'view' | 'edit'; tenant: Tenant }>({
   open: false,
   mode: 'view',
@@ -332,22 +390,93 @@ const paginatedTenants = computed(() => {
   return sortedTenants.value.slice(start, end)
 })
 
-const openModal = (mode: 'view' | 'edit', tenant: Tenant) => {
-  modal.value = { open: true, mode, tenant: { ...tenant } }
-}
+const formatRole = (role: string) => {
+  const roleMap: Record<string, string> = {
+    'tenant_admin': 'Quản trị viên',
+    'tenant_user': 'Người dùng',
+    'tenant_staff': 'Nhân viên',
+    'tenant_manager': 'Quản lý'
+  };
+  return roleMap[role] || role;
+};
+
+const formatStatus = (status: string) => {
+  const statusMap: Record<string, string> = {
+    'active': 'Hoạt động',
+    'inactive': 'Tạm dừng',
+    'deleted': 'Đã xóa'
+  };
+  return statusMap[status] || status;
+};
+
+const fetchUserStatistics = async (tenantId: number) => {
+  try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      throw new Error('Không tìm thấy token xác thực');
+    }
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/statistics/${tenantId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error('Lỗi khi lấy thống kê người dùng');
+    }
+
+    const data = await res.json();
+    tenantStats.value[tenantId] = data;
+  } catch (error) {
+    console.error('Lỗi khi lấy thống kê:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Lỗi',
+      text: 'Không thể lấy thống kê người dùng!',
+      confirmButtonColor: '#086df9',
+      timer: 3000,
+      timerProgressBar: true,
+      showConfirmButton: false,
+      showCloseButton: true,
+    });
+  }
+};
+
+const openModal = async (mode: 'view' | 'edit', tenant: Tenant) => {
+  modal.value = { open: true, mode, tenant: { ...tenant } };
+  if (mode === 'view') {
+    await fetchUserStatistics(tenant.tenant_id);
+  }
+};
 
 const closeModal = () => {
-  modal.value.open = false
-}
+  modal.value.open = false;
+};
 
 const fetchTenants = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants`)
-    if (!res.ok) throw new Error('Lỗi khi gọi API')
-    const data = await res.json()
-    tenants.value = data
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      throw new Error('Không tìm thấy token xác thực');
+    }
+    
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/tenants`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!res.ok) throw new Error('Lỗi khi gọi API');
+    const data = await res.json();
+    tenants.value = data;
+
+    // Fetch statistics for each tenant
+    for (const tenant of data) {
+      await fetchUserStatistics(tenant.tenant_id);
+    }
   } catch (err) {
-    console.error('Lỗi khi tải tenants:', err)
+    console.error('Lỗi khi tải tenants:', err);
     Swal.fire({
       icon: 'error',
       title: 'Lỗi',
@@ -357,7 +486,7 @@ const fetchTenants = async () => {
       timerProgressBar: true,
       showConfirmButton: false,
       showCloseButton: true,
-    })
+    });
   }
 }
 

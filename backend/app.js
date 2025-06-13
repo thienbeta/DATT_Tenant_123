@@ -1,29 +1,32 @@
 const express = require('express');
 const { Sequelize } = require('sequelize');
-const sequelize = require('./config/database'); // Giả định file cấu hình Sequelize
-const { createClient } = require('redis');
+const sequelize = require('./config/database');
+const redisClient = require('./config/redisClient');
 const userPurchaseRoutes = require('./routes/user_purchase.routes');
 const cors = require('cors');
 
 const app = express();
 
-app.use(cors());
-// Tạo client Redis
-const redisClient = createClient();
-redisClient.on('error', (err) => console.error('Redis error:', err));
+// Cấu hình CORS chi tiết hơn
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Cho phép các origin cụ thể
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Cho phép các phương thức
+  allowedHeaders: ['Content-Type', 'Authorization'], // Cho phép các header
+  credentials: true // Cho phép gửi cookie
+}));
 
 // Middleware để xử lý JSON
 app.use(express.json());
 
 // Kết nối Redis
-(async () => {
-  try {
-    await redisClient.connect();
-    console.log('✅ Đã kết nối Redis');
-  } catch (error) {
-    console.error('Lỗi kết nối Redis:', error);
-  }
-})();
+// (async () => { // Xóa đoạn này
+//   try {
+//     await redisClient.connect();
+//     console.log('✅ Đã kết nối Redis');
+//   } catch (error) {
+//     console.error('Lỗi kết nối Redis:', error);
+//   }
+// })();
 
 // Khởi tạo object db để chứa các model
 const db = {};
@@ -57,7 +60,7 @@ app.use('/api/service-data', require('./routes/service_data.routes')); // Route 
 app.use('/api/categories', require('./routes/category_package.routes')); // Route mới
 
 // Đồng bộ cơ sở dữ liệu và khởi động server
-db.sequelize.sync({ force: false }).then(() => {
+db.sequelize.sync({ force: false, alter: false }).then(() => {
   console.log('Database synced.');
   app.listen(3000, () => console.log('Server running on port 3000'));
 }).catch(error => {

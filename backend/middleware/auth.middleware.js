@@ -13,17 +13,39 @@ const authMiddleware = async (req, res, next) => {
 
         // Xác thực token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Kiểm tra xem decoded có user_id hoặc userId không
+        const userId = decoded.user_id || decoded.userId;
+        if (!userId) {
+            return res.status(401).json({ error: 'Token không chứa thông tin người dùng' });
+        }
 
         // Tìm user từ database
-        const user = await User.findByPk(decoded.userId);
+        const user = await User.findByPk(userId);
         if (!user) {
             return res.status(401).json({ error: 'Người dùng không tồn tại' });
         }
 
+        // Kiểm tra trạng thái user
+        if (user.status !== 'active') {
+            return res.status(401).json({ error: 'Tài khoản đã bị khóa hoặc không hoạt động' });
+        }
+
         // Thêm thông tin user vào request
-        req.user = user;
+        req.user = {
+            user_id: user.user_id,
+            email: user.email,
+            role: user.role,
+            tenant_id: user.tenant_id,
+            status: user.status
+        };
+        
         next();
     } catch (error) {
+        console.error('Auth middleware error:', error);
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token đã hết hạn' });
+        }
         return res.status(401).json({ error: 'Token không hợp lệ' });
     }
 };
