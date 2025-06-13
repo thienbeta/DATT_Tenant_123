@@ -270,7 +270,7 @@ exports.paypalSuccess = async (req, res) => {
               <li>Price: $${purchaseWithDetails.package.price}</li>
               <li>Purchase Date: ${purchaseWithDetails.purchase_date.toLocaleString()}</li>
               <li>Start Date: ${purchaseWithDetails.start_date.toLocaleString()}</li>
-              <li>End Date: ${purchaseWithDetails.end_date.toLocaleString()}</li>
+              <li>End Date: ${purchaseWithDetails.end_date ? purchaseWithDetails.end_date.toLocaleString() : 'N/A'}</li>
             </ul>
             <p>Regards,<br>Your Company</p>
           `,
