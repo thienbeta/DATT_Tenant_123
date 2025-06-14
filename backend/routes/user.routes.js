@@ -10,9 +10,9 @@ router.post('/register', controller.register);
 // User management routes (all require authentication)
 router.get('/', authMiddleware, controller.getAll);   // GET all users
 router.get('/:id', authMiddleware, controller.getById); // GET user by ID
-router.post('/', authMiddleware, controller.addCustomer); // POST create user
-router.put('/:id', authMiddleware, controller.updateCustomer); // PUT update user
-router.delete('/:id', authMiddleware, controller.deleteCustomer); // DELETE user
+router.post('/', authMiddleware, controller.create); // POST create user
+router.put('/:id', authMiddleware, controller.update); // PUT update user
+router.delete('/:id', authMiddleware, controller.delete); // DELETE user
 router.put('/:id/restore', authMiddleware, controller.restoreCustomer); // Restore user
 
 // Profile management

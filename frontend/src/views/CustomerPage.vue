@@ -437,12 +437,10 @@ const fetchCustomers = async () => {
         text: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
         confirmButtonColor: '#086df9',
       }).then(() => {
-        // Clear local storage
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         sessionStorage.removeItem('token')
         sessionStorage.removeItem('user')
-        // Redirect to login page
         window.location.href = '/login'
       })
     } else {
@@ -466,22 +464,90 @@ const addCustomer = async () => {
   try {
     const { full_name, email, phone_number, password } = modal.value.customer
     
-    if (!email || !password) {
+    if (!email || !password || !full_name || !phone_number) {
       Swal.fire({
         icon: 'warning',
         title: 'Thiếu thông tin',
-        text: 'Vui lòng điền email và mật khẩu',
+        text: 'Vui lòng điền đầy đủ thông tin bắt buộc',
         confirmButtonColor: '#086df9',
       })
       return
     }
 
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Email không hợp lệ',
+        text: 'Vui lòng nhập email đúng định dạng',
+        confirmButtonColor: '#086df9',
+      })
+      return
+    }
+
+    // Check if email already exists in the current list
+    const emailExists = customers.value.some(customer => 
+      customer.email.toLowerCase() === email.toLowerCase()
+    );
+    if (emailExists) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Email đã tồn tại',
+        text: 'Email này đã được sử dụng bởi một người dùng khác',
+        confirmButtonColor: '#086df9',
+      })
+      return
+    }
+
+    // Validate phone number format (VN format)
+    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+    if (!phoneRegex.test(phone_number)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Số điện thoại không hợp lệ',
+        text: 'Vui lòng nhập số điện thoại đúng định dạng Việt Nam',
+        confirmButtonColor: '#086df9',
+      })
+      return
+    }
+
+    // Validate password strength
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+    if (!passwordRegex.test(password)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Mật khẩu không đủ mạnh',
+        text: 'Mật khẩu phải có ít nhất 6 ký tự và chứa ít nhất một chữ hoa, một chữ thường, một số và một ký tự đặc biệt',
+        confirmButtonColor: '#086df9',
+      })
+      return
+    }
+
+    // Get current user info from localStorage or sessionStorage
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
+    if (!userStr) {
+      throw new Error('Không tìm thấy thông tin người dùng')
+    }
+
+    const currentUser = JSON.parse(userStr)
+    console.log('Current user info:', currentUser) // Debug log
+
     if (!currentUser.tenant_id) {
       throw new Error('Không tìm thấy thông tin tenant')
     }
     
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    if (!token) {
+      throw new Error('Không tìm thấy token xác thực')
+    }
+
+    console.log('Sending request with data:', {
+      ...modal.value.customer,
+      role: 'tenant_user',
+      tenant_id: currentUser.tenant_id
+    }) // Debug log
+
     const res = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/users`,
       {
@@ -511,12 +577,22 @@ const addCustomer = async () => {
     })
   } catch (err: any) {
     console.error('Lỗi thêm người dùng:', err)
-    Swal.fire({
-      icon: 'error',
-      title: 'Lỗi',
-      text: err.response?.data?.error || 'Không thể thêm người dùng!',
-      confirmButtonColor: '#086df9',
-    })
+    // Kiểm tra nếu lỗi là do email trùng lặp từ server
+    if (err.response?.data?.error?.includes('Email đã được sử dụng')) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Email đã tồn tại',
+        text: 'Email này đã được sử dụng bởi một người dùng khác',
+        confirmButtonColor: '#086df9',
+      })
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi',
+        text: err.message || err.response?.data?.error || 'Không thể thêm người dùng!',
+        confirmButtonColor: '#086df9',
+      })
+    }
   }
 }
 

@@ -79,6 +79,27 @@ exports.create = async (req, res) => {
       return res.status(400).json({ error: 'Email không hợp lệ' });
     }
 
+    // Kiểm tra email đã tồn tại trong cùng tenant
+    const existingUser = await User.findOne({ 
+      where: { 
+        email: email.toLowerCase(),
+        tenant_id: tenant_id
+      } 
+    });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email đã được sử dụng trong tenant này' });
+    }
+
+    // Kiểm tra email đã tồn tại trong toàn bộ hệ thống
+    const existingUserGlobal = await User.findOne({ 
+      where: { 
+        email: email.toLowerCase()
+      } 
+    });
+    if (existingUserGlobal) {
+      return res.status(400).json({ error: 'Email đã được sử dụng bởi một người dùng khác' });
+    }
+
     // Tăng cường bảo mật mật khẩu
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
     if (!passwordRegex.test(password)) {
@@ -91,12 +112,6 @@ exports.create = async (req, res) => {
     const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
     if (!phoneRegex.test(phone_number)) {
       return res.status(400).json({ error: 'Số điện thoại không hợp lệ' });
-    }
-
-    // Kiểm tra email đã tồn tại
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email đã được sử dụng' });
     }
 
     // Kiểm tra role hợp lệ (không cho phép tạo admin)
@@ -113,7 +128,7 @@ exports.create = async (req, res) => {
 
     // Tạo user mới
     const newUser = await User.create({
-      email,
+      email: email.toLowerCase(), // Lưu email dưới dạng chữ thường
       password_hash,
       full_name,
       phone_number,
