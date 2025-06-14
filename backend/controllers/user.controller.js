@@ -13,36 +13,78 @@ exports.getAll = async (req, res) => {
       return res.status(401).json({ error: 'Không tìm thấy thông tin người dùng' });
     }
 
-    const tenant_id = req.user.tenant_id;
-    
+    // Nếu là global_admin, lấy tất cả user
     if (req.user.role === 'global_admin') {
-      const users = await User.findAll({
-        attributes: { exclude: ['password_hash'] }
-      });
-      return res.status(200).json(users);
+      console.log('Fetching all users for global_admin');
+      try {
+        const users = await User.findAll({
+          attributes: { exclude: ['password_hash'] },
+          include: [
+            {
+              model: Tenant,
+              as: 'tenant',
+              attributes: ['tenant_id', 'name', 'status']
+            }
+          ]
+        });
+        console.log('Found users:', users.length);
+        return res.status(200).json(users);
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        return res.status(500).json({ 
+          error: 'Lỗi khi truy vấn cơ sở dữ liệu',
+          details: dbError.message 
+        });
+      }
     }
-    
-    if (!tenant_id) {
-      return res.status(400).json({ error: 'Không tìm thấy thông tin tenant' });
-    }
-    
-    const users = await User.findAll({
-      where: { tenant_id },
-      attributes: { exclude: ['password_hash'] }
-    });
 
-    console.log('Found users:', users.length);
-    return res.status(200).json(users);
+    // Nếu là tenant_admin, chỉ lấy user trong tenant của họ
+    if (req.user.role === 'tenant_admin') {
+      if (!req.user.tenant_id) {
+        return res.status(400).json({ error: 'Không tìm thấy thông tin tenant' });
+      }
+
+      console.log('Fetching users for tenant:', req.user.tenant_id);
+      try {
+        const users = await User.findAll({
+          where: { tenant_id: req.user.tenant_id },
+          attributes: { exclude: ['password_hash'] },
+          include: [
+            {
+              model: Tenant,
+              as: 'tenant',
+              attributes: ['tenant_id', 'name', 'status']
+            }
+          ]
+        });
+        console.log('Found users:', users.length);
+        return res.status(200).json(users);
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        return res.status(500).json({ 
+          error: 'Lỗi khi truy vấn cơ sở dữ liệu',
+          details: dbError.message 
+        });
+      }
+    }
+
+    // Nếu là tenant_user, không có quyền xem danh sách user
+    return res.status(403).json({ error: 'Không có quyền truy cập' });
   } catch (error) {
     console.error('Get all users error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: 'Lỗi server',
+      details: error.message 
+    });
   }
 };
 
 // GET /users/:id
 exports.getById = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['password_hash'] }
+    });
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.status(200).json(user);
   } catch (error) {
@@ -79,27 +121,6 @@ exports.create = async (req, res) => {
       return res.status(400).json({ error: 'Email không hợp lệ' });
     }
 
-    // Kiểm tra email đã tồn tại trong cùng tenant
-    const existingUser = await User.findOne({ 
-      where: { 
-        email: email.toLowerCase(),
-        tenant_id: tenant_id
-      } 
-    });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email đã được sử dụng trong tenant này' });
-    }
-
-    // Kiểm tra email đã tồn tại trong toàn bộ hệ thống
-    const existingUserGlobal = await User.findOne({ 
-      where: { 
-        email: email.toLowerCase()
-      } 
-    });
-    if (existingUserGlobal) {
-      return res.status(400).json({ error: 'Email đã được sử dụng bởi một người dùng khác' });
-    }
-
     // Tăng cường bảo mật mật khẩu
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
     if (!passwordRegex.test(password)) {
@@ -112,6 +133,12 @@ exports.create = async (req, res) => {
     const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
     if (!phoneRegex.test(phone_number)) {
       return res.status(400).json({ error: 'Số điện thoại không hợp lệ' });
+    }
+
+    // Kiểm tra email đã tồn tại
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email đã được sử dụng' });
     }
 
     // Kiểm tra role hợp lệ (không cho phép tạo admin)
@@ -128,7 +155,7 @@ exports.create = async (req, res) => {
 
     // Tạo user mới
     const newUser = await User.create({
-      email: email.toLowerCase(), // Lưu email dưới dạng chữ thường
+      email,
       password_hash,
       full_name,
       phone_number,
@@ -185,21 +212,70 @@ exports.delete = async (req, res) => {
   }
 };
 
-// GET /users/tenant/:tenant_id
+// Lấy danh sách user theo tenant
 exports.getByTenant = async (req, res) => {
   try {
-    const users = await User.findAll({ where: { tenant_id: req.params.tenant_id } });
-    res.status(200).json(users);
+    // Nếu là global_admin, có thể xem user của bất kỳ tenant nào
+    if (req.user.role === 'global_admin') {
+      const users = await User.findAll({ 
+        where: { tenant_id: req.params.tenant_id },
+        attributes: { exclude: ['password_hash'] }
+      });
+      return res.status(200).json(users);
+    }
+
+    // Nếu là tenant_admin, chỉ có thể xem user trong tenant của họ
+    if (req.user.role === 'tenant_admin') {
+      if (req.user.tenant_id !== parseInt(req.params.tenant_id)) {
+        return res.status(403).json({ error: 'Không có quyền truy cập thông tin này' });
+      }
+      
+      const users = await User.findAll({ 
+        where: { tenant_id: req.params.tenant_id },
+        attributes: { exclude: ['password_hash'] }
+      });
+      return res.status(200).json(users);
+    }
+
+    // Nếu là tenant_user, không có quyền xem danh sách user
+    return res.status(403).json({ error: 'Không có quyền truy cập' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// GET /users/role/:role
+// Lấy danh sách user theo role
 exports.getByRole = async (req, res) => {
   try {
-    const users = await User.findAll({ where: { role: req.params.role } });
-    res.status(200).json(users);
+    // Nếu là global_admin, có thể xem user của bất kỳ role nào
+    if (req.user.role === 'global_admin') {
+      const users = await User.findAll({ 
+        where: { role: req.params.role },
+        attributes: { exclude: ['password_hash'] },
+        include: [
+          {
+            model: Tenant,
+            attributes: ['tenant_id', 'name', 'status']
+          }
+        ]
+      });
+      return res.status(200).json(users);
+    }
+
+    // Nếu là tenant_admin, chỉ có thể xem user trong tenant của họ
+    if (req.user.role === 'tenant_admin') {
+      const users = await User.findAll({ 
+        where: { 
+          role: req.params.role,
+          tenant_id: req.user.tenant_id
+        },
+        attributes: { exclude: ['password_hash'] }
+      });
+      return res.status(200).json(users);
+    }
+
+    // Nếu là tenant_user, không có quyền xem danh sách user
+    return res.status(403).json({ error: 'Không có quyền truy cập' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -543,10 +619,26 @@ exports.getCustomers = async (req, res) => {
   try {
     const tenant_id = req.user.tenant_id; 
     
-    // Tìm tất cả user thuộc tenant hiện tại
+    // Nếu là global_admin, lấy tất cả khách hàng
+    if (req.user.role === 'global_admin') {
+      const customers = await User.findAll({
+        where: {
+          role: 'tenant_user'
+        },
+        attributes: ['user_id', 'email', 'full_name', 'phone_number', 'role', 'status', 'created_at', 'tenant_id']
+      });
+      
+      return res.status(200).json({
+        message: 'Lấy danh sách người dùng thành công',
+        data: customers
+      });
+    }
+    
+    // Nếu không phải global_admin, chỉ lấy khách hàng của tenant hiện tại
     const customers = await User.findAll({
       where: {
-        tenant_id
+        tenant_id,
+        role: 'tenant_user'
       },
       attributes: ['user_id', 'email', 'full_name', 'phone_number', 'role', 'status', 'created_at']
     });
@@ -566,7 +658,27 @@ exports.getCustomerById = async (req, res) => {
     const { id } = req.params;
     const tenant_id = req.user.tenant_id; 
 
-    // Tìm user theo id và tenant_id
+    // Nếu là global_admin, có thể xem thông tin khách hàng của bất kỳ tenant nào
+    if (req.user.role === 'global_admin') {
+      const customer = await User.findOne({
+        where: {
+          user_id: id,
+          role: 'tenant_user'
+        },
+        attributes: ['user_id', 'email', 'full_name', 'phone_number', 'status', 'created_at', 'tenant_id']
+      });
+
+      if (!customer) {
+        return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
+      }
+
+      return res.status(200).json({
+        message: 'Lấy thông tin khách hàng thành công',
+        data: customer
+      });
+    }
+
+    // Nếu không phải global_admin, chỉ có thể xem thông tin khách hàng của tenant hiện tại
     const customer = await User.findOne({
       where: {
         user_id: id,
@@ -597,7 +709,52 @@ exports.updateCustomer = async (req, res) => {
     const { full_name, phone_number, status } = req.body;
     const tenant_id = req.user.tenant_id; // Lấy tenant_id từ user đã xác thực
 
-    // Tìm user theo id và tenant_id
+    // Nếu là global_admin, có thể cập nhật thông tin khách hàng của bất kỳ tenant nào
+    if (req.user.role === 'global_admin') {
+      const customer = await User.findOne({
+        where: {
+          user_id: id,
+          role: 'tenant_user'
+        }
+      });
+
+      if (!customer) {
+        return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
+      }
+
+      // Validate số điện thoại nếu có
+      if (phone_number) {
+        const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+        if (!phoneRegex.test(phone_number)) {
+          return res.status(400).json({ error: 'Số điện thoại không hợp lệ' });
+        }
+      }
+
+      // Cập nhật thông tin
+      const updateData = {};
+      if (full_name) updateData.full_name = full_name;
+      if (phone_number) updateData.phone_number = phone_number;
+      if (status && ['active', 'inactive', 'deleted'].includes(status)) {
+        updateData.status = status;
+      }
+
+      await customer.update(updateData);
+
+      return res.status(200).json({
+        message: 'Cập nhật thông tin khách hàng thành công',
+        data: {
+          user_id: customer.user_id,
+          email: customer.email,
+          full_name: customer.full_name,
+          phone_number: customer.phone_number,
+          status: customer.status,
+          created_at: customer.created_at,
+          tenant_id: customer.tenant_id
+        }
+      });
+    }
+
+    // Nếu không phải global_admin, chỉ có thể cập nhật thông tin khách hàng của tenant hiện tại
     const customer = await User.findOne({
       where: {
         user_id: id,
@@ -651,7 +808,28 @@ exports.deleteCustomer = async (req, res) => {
     const { id } = req.params;
     const tenant_id = req.user.tenant_id; // Lấy tenant_id từ user đã xác thực
 
-    // Tìm user theo id và tenant_id
+    // Nếu là global_admin, có thể xóa khách hàng của bất kỳ tenant nào
+    if (req.user.role === 'global_admin') {
+      const customer = await User.findOne({
+        where: {
+          user_id: id,
+          role: 'tenant_user'
+        }
+      });
+
+      if (!customer) {
+        return res.status(404).json({ error: 'Không tìm thấy khách hàng' });
+      }
+
+      // Cập nhật trạng thái thành deleted
+      await customer.update({ status: 'deleted' });
+
+      return res.status(200).json({
+        message: 'Xóa khách hàng thành công'
+      });
+    }
+
+    // Nếu không phải global_admin, chỉ có thể xóa khách hàng của tenant hiện tại
     const customer = await User.findOne({
       where: {
         user_id: id,
@@ -682,7 +860,38 @@ exports.restoreCustomer = async (req, res) => {
     const { id } = req.params;
     const tenant_id = req.user.tenant_id; 
 
-    // Tìm user theo id và tenant_id
+    // Nếu là global_admin, có thể khôi phục khách hàng của bất kỳ tenant nào
+    if (req.user.role === 'global_admin') {
+      const customer = await User.findOne({
+        where: {
+          user_id: id,
+          role: 'tenant_user',
+          status: 'deleted'
+        }
+      });
+
+      if (!customer) {
+        return res.status(404).json({ error: 'Không tìm thấy khách hàng đã xóa' });
+      }
+
+      // Cập nhật trạng thái thành active
+      await customer.update({ status: 'active' });
+
+      return res.status(200).json({
+        message: 'Khôi phục khách hàng thành công',
+        data: {
+          user_id: customer.user_id,
+          email: customer.email,
+          full_name: customer.full_name,
+          phone_number: customer.phone_number,
+          status: customer.status,
+          created_at: customer.created_at,
+          tenant_id: customer.tenant_id
+        }
+      });
+    }
+
+    // Nếu không phải global_admin, chỉ có thể khôi phục khách hàng của tenant hiện tại
     const customer = await User.findOne({
       where: {
         user_id: id,

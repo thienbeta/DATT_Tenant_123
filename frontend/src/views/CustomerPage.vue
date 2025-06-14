@@ -395,27 +395,42 @@ const fetchCustomers = async () => {
     const currentUser = JSON.parse(userStr)
     console.log('Current user:', currentUser)
 
-    if (!currentUser.tenant_id) {
-      throw new Error('Không tìm thấy thông tin tenant')
+    // Nếu là global_admin, lấy tất cả khách hàng
+    if (currentUser.role === 'global_admin') {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      customers.value = res.data.filter((user: Customer) => user.role === 'tenant_user')
+      return
     }
 
-    console.log('Fetching users for tenant:', currentUser.tenant_id)
-    
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`
+    // Nếu là tenant_admin, chỉ lấy khách hàng trong tenant của họ
+    if (currentUser.role === 'tenant_admin') {
+      if (!currentUser.tenant_id) {
+        throw new Error('Không tìm thấy thông tin tenant')
       }
-    })
 
-    console.log('API Response:', res.data)
+      console.log('Fetching users for tenant:', currentUser.tenant_id)
+      
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
 
-    // Filter out the current user (tenant_admin) from the list
-    customers.value = res.data.filter((user: Customer) => 
-      user.tenant_id === currentUser.tenant_id && 
-      user.user_id !== currentUser.user_id
-    )
+      console.log('API Response:', res.data)
 
-    console.log('Filtered customers:', customers.value)
+      // Filter out the current user (tenant_admin) from the list
+      customers.value = res.data.filter((user: Customer) => 
+        user.tenant_id === currentUser.tenant_id && 
+        user.user_id !== currentUser.user_id &&
+        user.role === 'tenant_user'
+      )
+
+      console.log('Filtered customers:', customers.value)
+    }
 
     if (customers.value.length === 0) {
       Swal.fire({

@@ -5,8 +5,8 @@ exports.getAll = async (req, res) => {
     // Lấy tenant_id từ user đã xác thực
     const tenant_id = req.user?.tenant_id;
     
-    // Nếu là super_admin, trả về tất cả tenant
-    if (req.user?.role === 'super_admin') {
+    // Nếu là super_admin hoặc global_admin, trả về tất cả tenant
+    if (req.user?.role === 'global_admin') {
       const tenants = await Tenant.findAll({
         include: [
           { model: User, as: 'adminUser', attributes: ['user_id', 'email'] }
