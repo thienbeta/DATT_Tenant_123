@@ -31,6 +31,11 @@ const authMiddleware = async (req, res, next) => {
             return res.status(401).json({ error: 'Tài khoản đã bị khóa hoặc không hoạt động' });
         }
 
+        // Kiểm tra tenant_id cho tenant_admin và tenant_user
+        if ((user.role === 'tenant_admin' || user.role === 'tenant_user') && !user.tenant_id) {
+            return res.status(403).json({ error: 'Người dùng không thuộc tenant nào' });
+        }
+
         // Thêm thông tin user vào request
         req.user = {
             user_id: user.user_id,
@@ -39,6 +44,11 @@ const authMiddleware = async (req, res, next) => {
             tenant_id: user.tenant_id,
             status: user.status
         };
+
+        // Thêm tenant filter cho các truy vấn
+        if (user.role !== 'global_admin') {
+            req.tenantFilter = { tenant_id: user.tenant_id };
+        }
         
         next();
     } catch (error) {
