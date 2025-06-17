@@ -72,6 +72,8 @@
             <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Họ tên</th>
             <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Email</th>
             <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Số điện thoại</th>
+            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Vai trò</th>
+            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Tenant</th>
             <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Ngày tạo</th>
             <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Trạng thái</th>
             <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Thao tác</th>
@@ -87,6 +89,28 @@
             <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.full_name }}</td>
             <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.email }}</td>
             <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.phone_number }}</td>
+            <td class="tw-px-6 tw-py-4">
+              <span
+                :class="[
+                  'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
+                  customer.role === 'global_admin' ? 'tw-bg-purple-100 tw-text-purple-700' :
+                  customer.role === 'tenant_admin' ? 'tw-bg-blue-100 tw-text-blue-700' :
+                  'tw-bg-green-100 tw-text-green-700'
+                ]"
+              >
+                {{ 
+                  customer.role === 'global_admin' ? 'Quản trị viên hệ thống' : 
+                  customer.role === 'tenant_admin' ? 'Quản trị viên tenant' : 
+                  'Người dùng tenant' 
+                }}
+              </span>
+            </td>
+            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
+              <span v-if="customer.tenant_id">
+                {{ customer.tenant?.name || `Tenant ID: ${customer.tenant_id}` }}
+              </span>
+              <span v-else class="tw-text-gray-400">Không có tenant</span>
+            </td>
             <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
               {{ new Date(customer.created_at || '').toLocaleDateString('vi-VN') }}
             </td>
@@ -258,6 +282,37 @@
               />
             </div>
           </div>
+          <div v-if="modal.mode === 'view' || modal.mode === 'edit'">
+            <label class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300 tw-mb-1">Vai trò</label>
+            <div class="tw-relative">
+              <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
+                <Shield class="tw-w-5 tw-h-5 tw-text-[#086df9]" />
+              </span>
+              <select
+                :disabled="modal.mode === 'view'"
+                v-model="modal.customer.role"
+                class="tw-w-full tw-pl-10 tw-pr-3 tw-py-2 tw-border tw-border-gray-300 tw-rounded-lg focus:tw-border-[#086df9] focus:tw-ring-2 focus:tw-ring-blue-200 dark:tw-bg-gray-700 dark:tw-border-gray-600 dark:tw-text-white"
+              >
+                <option value="global_admin">Quản trị viên hệ thống</option>
+                <option value="tenant_admin">Quản trị viên tenant</option>
+                <option value="tenant_user">Người dùng tenant</option>
+              </select>
+            </div>
+          </div>
+          <div v-if="modal.mode === 'view' || modal.mode === 'edit'">
+            <label class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 dark:tw-text-gray-300 tw-mb-1">Tenant</label>
+            <div class="tw-relative">
+              <span class="tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-3">
+                <Building2 class="tw-w-5 tw-h-5 tw-text-[#086df9]" />
+              </span>
+              <input
+                type="text"
+                disabled
+                :value="modal.customer.tenant?.name || (modal.customer.tenant_id ? `Tenant ID: ${modal.customer.tenant_id}` : 'Không có tenant')"
+                class="tw-w-full tw-pl-10 tw-pr-3 tw-py-2 tw-border tw-border-gray-300 tw-rounded-lg tw-bg-gray-100 dark:tw-bg-gray-700 dark:tw-border-gray-600 dark:tw-text-white"
+              />
+            </div>
+          </div>
         </div>
 
         <div v-if="modal.mode !== 'view'" class="tw-mt-8 tw-flex tw-justify-end tw-gap-3">
@@ -302,7 +357,9 @@ import {
   Recycle,
   PlusCircle,
   Lock,
-  Activity
+  Activity,
+  Shield,
+  Building2
 } from 'lucide-vue-next'
 import axios from 'axios'
 
@@ -316,6 +373,7 @@ interface Customer {
   password?: string
   role?: string
   tenant_id?: number
+  tenant?: { name: string }
 }
 
 const customers = ref<Customer[]>([])
@@ -378,59 +436,44 @@ const closeModal = () => {
 
 const fetchCustomers = async () => {
   try {
-    loading.value = true
-    error.value = ''
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    loading.value = true;
+    error.value = '';
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     
     if (!token) {
-      throw new Error('Không tìm thấy token xác thực')
+      throw new Error('Không tìm thấy token xác thực');
     }
 
     // Get current user info
-    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (!userStr) {
-      throw new Error('Không tìm thấy thông tin người dùng')
+      throw new Error('Không tìm thấy thông tin người dùng');
     }
 
-    const currentUser = JSON.parse(userStr)
-    console.log('Current user:', currentUser)
+    const currentUser = JSON.parse(userStr);
+    console.log('Current user:', currentUser);
 
-    // Nếu là global_admin, lấy tất cả khách hàng
-    if (currentUser.role === 'global_admin') {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      customers.value = res.data.filter((user: Customer) => user.role === 'tenant_user')
-      return
-    }
-
-    // Nếu là tenant_admin, chỉ lấy khách hàng trong tenant của họ
-    if (currentUser.role === 'tenant_admin') {
-      if (!currentUser.tenant_id) {
-        throw new Error('Không tìm thấy thông tin tenant')
+    // Fetch users with tenant information
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      params: {
+        include: 'tenant'
       }
+    });
 
-      console.log('Fetching users for tenant:', currentUser.tenant_id)
-      
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      console.log('API Response:', res.data)
-
-      // Filter out the current user (tenant_admin) from the list
-      customers.value = res.data.filter((user: Customer) => 
+    // Filter users based on role
+    if (currentUser.role === 'global_admin') {
+      customers.value = response.data;
+    } else if (currentUser.role === 'tenant_admin') {
+      customers.value = response.data.filter(user => 
         user.tenant_id === currentUser.tenant_id && 
-        user.user_id !== currentUser.user_id &&
-        user.role === 'tenant_user'
-      )
-
-      console.log('Filtered customers:', customers.value)
+        user.user_id !== currentUser.user_id
+      );
     }
+
+    filteredCustomers.value = customers.value;
 
     if (customers.value.length === 0) {
       Swal.fire({
@@ -438,26 +481,25 @@ const fetchCustomers = async () => {
         title: 'Thông báo',
         text: 'Chưa có khách hàng nào trong hệ thống',
         confirmButtonColor: '#086df9',
-      })
+      });
     }
-  } catch (err: any) {
-    console.error('Lỗi khi tải khách hàng:', err)
-    error.value = err.response?.data?.error || err.message || 'Không thể tải danh sách khách hàng!'
+  } catch (err) {
+    console.error('Lỗi khi tải khách hàng:', err);
+    error.value = err.response?.data?.error || err.message || 'Không thể tải danh sách khách hàng!';
     
     if (err.response?.status === 401) {
-      // Handle unauthorized access
       Swal.fire({
         icon: 'error',
         title: 'Lỗi xác thực',
         text: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
         confirmButtonColor: '#086df9',
       }).then(() => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        sessionStorage.removeItem('token')
-        sessionStorage.removeItem('user')
-        window.location.href = '/login'
-      })
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        window.location.href = '/login';
+      });
     } else {
       Swal.fire({
         icon: 'error',
@@ -468,12 +510,26 @@ const fetchCustomers = async () => {
         timerProgressBar: true,
         showConfirmButton: false,
         showCloseButton: true,
-      })
+      });
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
+
+const saveCustomer = async () => {
+  try {
+    if (modal.value.mode === 'add') {
+      await axios.post('/api/users', modal.value.customer);
+    } else if (modal.value.mode === 'edit') {
+      await axios.put(`/api/users/${modal.value.customer.user_id}`, modal.value.customer);
+    }
+    await fetchCustomers();
+    closeModal();
+  } catch (error) {
+    console.error('Error saving customer:', error);
+  }
+};
 
 const addCustomer = async () => {
   try {
