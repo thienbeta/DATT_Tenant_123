@@ -341,6 +341,16 @@ const watchTab = (newTab) => {
 
 // Load initial data
 onMounted(async () => {
+  // Kiểm tra token
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  if (!token) {
+    console.log('Không có token, redirect về login')
+    window.location.href = '/login'
+    return
+  }
+  
+  console.log('Token found:', token ? 'Có token' : 'Không có token')
+  
   // TODO: Load packages and users data
   // This would typically come from other composables or API calls
 })

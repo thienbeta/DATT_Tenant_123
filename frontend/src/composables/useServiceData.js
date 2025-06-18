@@ -11,7 +11,7 @@ const pagination = ref({
   limit: 10
 })
 
-const API_BASE_URL = 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 // Lấy token từ localStorage
 const getAuthToken = () => {
@@ -29,11 +29,28 @@ const apiClient = axios.create({
 // Interceptor để thêm token vào header
 apiClient.interceptors.request.use((config) => {
   const token = getAuthToken()
+  console.log('Token check:', {
+    hasToken: !!token,
+    tokenLength: token ? token.length : 0,
+    tokenStart: token ? token.substring(0, 20) + '...' : 'none'
+  })
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
+
+// Interceptor để xử lý lỗi
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Token không hợp lệ hoặc đã hết hạn')
+      // Không redirect tự động, để component xử lý
+    }
+    return Promise.reject(error)
+  }
+)
 
 export function useServiceData() {
   // Lấy danh sách service data

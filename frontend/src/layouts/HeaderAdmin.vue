@@ -44,16 +44,6 @@
         Dữ liệu dịch vụ
       </RouterLink>
 
-      <RouterLink to="/inventory" :class="navClass('/inventory')">
-        <Warehouse class="tw-w-4 tw-h-4 tw-text-teal-600" />
-        Tồn kho
-      </RouterLink>
-
-      <RouterLink to="/promotions" :class="navClass('/promotions')">
-        <Gift class="tw-w-4 tw-h-4 tw-text-pink-500" />
-        Khuyến mãi
-      </RouterLink>
-
       <RouterLink to="/shop" :class="navClass('/shop')">
         <Store class="tw-w-4 tw-h-4 tw-text-blue-500" />
         Cửa hàng
