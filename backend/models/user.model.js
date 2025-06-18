@@ -7,7 +7,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING,
-      unique: true,
+      // unique: true, // Đã bỏ ràng buộc unique
+      allowNull: false,
+    },
+    full_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    phone_number: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     password_hash: {
@@ -22,7 +30,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
     },
-    
     status: {
       type: DataTypes.ENUM('active', 'inactive', 'deleted'),
       defaultValue: 'active',
@@ -53,3 +60,4 @@ module.exports = (sequelize, DataTypes) => {
 
   return User;
 };
+

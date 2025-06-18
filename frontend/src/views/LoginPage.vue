@@ -100,7 +100,7 @@ const handleLogin = async () => {
     loading.value = true
     error.value = ''
 
-    const response = await axios.post('http://localhost:3000/api/users/login', {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/users/login`, {
       email: form.email,
       password: form.password
     })
@@ -110,8 +110,12 @@ const handleLogin = async () => {
     storage.setItem('token', response.data.token)
     storage.setItem('user', JSON.stringify(response.data.user))
 
-    // Chuyển hướng đến trang chủ
-    router.push('/')
+    // Chuyển hướng theo role
+    if (response.data.user.role === 'tenant_user') {
+      router.push('/tenant-user/dashboard').then(() => window.location.reload())
+    } else {
+      router.push('/').then(() => window.location.reload())
+    }
   } catch (err) {
     if (err.response?.data?.error) {
       error.value = err.response.data.error
