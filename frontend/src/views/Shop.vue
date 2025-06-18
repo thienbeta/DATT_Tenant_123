@@ -272,7 +272,12 @@ const fetchPackages = async () => {
     if (filters.value.category) params.append('category_id', filters.value.category);
     params.append('status', 'active');
 
-    const res = await fetch(`${urlBase}/api/service-packages?${params.toString()}`);
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const res = await fetch(`${urlBase}/api/service-packages?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (!res.ok) throw new Error(`Lỗi ${res.status}`);
     const { data } = await res.json();
 
@@ -291,7 +296,12 @@ const fetchPackages = async () => {
 
 const fetchCategories = async () => {
   try {
-    const res = await fetch(`${urlBase}/api/categories`);
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const res = await fetch(`${urlBase}/api/categories`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (!res.ok) throw new Error(`Lỗi ${res.status}`);
     const { data } = await res.json();
     categories.value = data;
