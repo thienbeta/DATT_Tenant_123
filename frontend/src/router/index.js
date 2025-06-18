@@ -12,7 +12,8 @@ import PackagePage from '../views/PackagePage.vue'
 import Shop from '../views/Shop.vue'
 import { Package } from 'lucide-vue-next'
 import CategoryPage from '../views/CategoryPage.vue'
-import CustomerPage from '../views/CustomerPage.vue' // Thêm import cho trang khách hàng
+import CustomerPage from '../views/CustomerPage.vue'
+import ServiceDataPage from '../views/ServiceDataPage.vue'
 
 const routes = [
   {
@@ -45,7 +46,8 @@ const routes = [
       { path: 'package', name: 'Package', component: PackagePage },
       { path: 'shop', name: 'Shop', component: Shop },
       { path: 'categories', name: 'Category', component: CategoryPage },
-      { path: 'customers', name: 'Customer', component: CustomerPage } 
+      { path: 'customers', name: 'Customer', component: CustomerPage },
+      { path: 'service-data', name: 'ServiceData', component: ServiceDataPage }
     ]
   }
 ]

@@ -39,6 +39,11 @@
         Khách hàng
       </RouterLink>
 
+      <RouterLink to="/service-data" :class="navClass('/service-data')">
+        <Database class="tw-w-4 tw-h-4 tw-text-cyan-500" />
+        Dữ liệu dịch vụ
+      </RouterLink>
+
       <RouterLink to="/inventory" :class="navClass('/inventory')">
         <Warehouse class="tw-w-4 tw-h-4 tw-text-teal-600" />
         Tồn kho
@@ -103,7 +108,8 @@ import {
   Settings,
   User,
   LogOut,
-  Store
+  Store,
+  Database
 } from 'lucide-vue-next'
 
 const route = useRoute()
