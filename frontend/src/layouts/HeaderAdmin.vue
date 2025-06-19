@@ -19,7 +19,7 @@
         Quản lý danh mục
       </RouterLink>
 
-      <RouterLink v-if="isGlobalAdmin" to="/package" :class="navClass('/package')">
+      <RouterLink v-if="isGlobalAdmin" to="/tenant-user/package" :class="navClass('/package')">
         <Boxes class="tw-w-4 tw-h-4 tw-text-green-600" />
         Quản lý sản phẩm
       </RouterLink>
