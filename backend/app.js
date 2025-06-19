@@ -1,7 +1,7 @@
 const express = require('express');
 const { Sequelize } = require('sequelize');
 const sequelize = require('./config/database');
-const redisClient = require('./config/redisClient');
+const { createClient } = require('redis'); // Import createClient từ redis
 const cors = require('cors');
 
 const app = express();
@@ -14,20 +14,13 @@ app.use(cors({
   credentials: true // Cho phép gửi cookie
 }));
 
+// Tạo redisClient một lần duy nhất
 const redisClient = createClient({
   url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
 });
 redisClient.on('error', (err) => console.error('Redis error:', err));
 
 // Kết nối Redis
-// (async () => { // Xóa đoạn này
-//   try {
-//     await redisClient.connect();
-//     console.log('✅ Đã kết nối Redis');
-//   } catch (error) {
-//     console.error('Lỗi kết nối Redis:', error);
-//   }
-// })();
 (async () => {
   try {
     await redisClient.connect();

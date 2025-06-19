@@ -129,17 +129,17 @@
               </svg>
               RAM: {{ pkg.ram }}
             </li>
-            <li v-if="pkg.storage" class="flex items-center">
+            <li v-if="pkg.file_storage_limit" class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
               </svg>
-              Storage: {{ pkg.file_storage_limit }}
+              Storage: {{ formatStorage(pkg.file_storage_limit) }}
             </li>
             <li class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
               </svg>
-              Băng thông: {{ pkg.bandwidth_limit }}
+              Băng thông: {{ formatStorage(pkg.bandwidth_limit) }}
             </li>
             <li class="flex items-center">
               <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -198,17 +198,17 @@
                 </svg>
                 RAM: {{ selectedPackage.ram }}
               </li>
-              <li v-if="selectedPackage.storage" class="flex items-center">
+              <li v-if="selectedPackage.file_storage_limit" class="flex items-center">
                 <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
                 </svg>
-                Storage: {{ selectedPackage.file_storage_limit }}
+                Storage: {{ formatStorage(selectedPackage.file_storage_limit) }}
               </li>
               <li class="flex items-center">
                 <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
                 </svg>
-                Băng thông: {{ selectedPackage.bandwidth_limit }}
+                Băng thông: {{ formatStorage(selectedPackage.bandwidth_limit) }}
               </li>
               <li class="flex items-center">
                 <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -230,19 +230,19 @@
               </li>
             </ul>
             <div class="border-t border-gray-200 pt-4 mb-4">
-  <h3 class="text-sm font-semibold text-gray-900 mb-2">Thông tin đơn hàng</h3>
-  <p class="text-xs text-gray-600"><strong>Tên gói:</strong> {{ selectedPackage.name || 'Chưa xác định' }}</p>
-  <p class="text-xs text-gray-600"><strong>Loại gói:</strong> {{ selectedPackage.package_type || 'Chưa xác định' }}</p>
-  <p class="text-xs text-gray-600"><strong>Loại dịch vụ:</strong> {{ selectedPackage.service_type || 'Chưa xác định' }}</p>
-  <p class="text-xs text-gray-600"><strong>Chu kỳ thanh toán:</strong> {{ selectedPackage.billing_cycle || 'Chưa xác định' }}</p>
-  <p class="text-xs text-gray-600"><strong>Phí cài đặt:</strong> 0đ</p>
-  <p class="text-xs text-gray-600"><strong>Giá:</strong> {{ formatPrice(selectedPackage.price) }}đ</p>
-  <p v-if="selectedPackage.file_storage_limit" class="text-xs text-gray-600"><strong>Giới hạn lưu trữ:</strong> {{ formatStorage(selectedPackage.file_storage_limit) }}</p>
-  <p v-if="selectedPackage.bandwidth_limit" class="text-xs text-gray-600"><strong>Giới hạn băng thông:</strong> {{ formatStorage(selectedPackage.bandwidth_limit) }}</p>
-  <p v-if="selectedPackage.database_limit" class="text-xs text-gray-600"><strong>Giới hạn cơ sở dữ liệu:</strong> {{ formatStorage(selectedPackage.database_limit) }}</p>
-  <p v-if="selectedPackage.api_call_limit" class="text-xs text-gray-600"><strong>Giới hạn API Call:</strong> {{ selectedPackage.api_call_limit }}</p>
-  <p class="text-sm font-bold text-gray-900 mt-2">Tổng tiền: {{ formatPrice(selectedPackage.price) }}đ</p>
-</div>
+              <h3 class="text-sm font-semibold text-gray-900 mb-2">Thông tin đơn hàng</h3>
+              <p class="text-xs text-gray-600"><strong>Tên gói:</strong> {{ selectedPackage.name || 'Chưa xác định' }}</p>
+              <p class="text-xs text-gray-600"><strong>Loại gói:</strong> {{ selectedPackage.package_type || 'Chưa xác định' }}</p>
+              <p class="text-xs text-gray-600"><strong>Loại dịch vụ:</strong> {{ selectedPackage.service_type || 'Chưa xác định' }}</p>
+              <p class="text-xs text-gray-600"><strong>Chu kỳ thanh toán:</strong> {{ selectedPackage.billing_cycle || 'Chưa xác định' }}</p>
+              <p class="text-xs text-gray-600"><strong>Phí cài đặt:</strong> 0đ</p>
+              <p class="text-xs text-gray-600"><strong>Giá:</strong> {{ formatPrice(selectedPackage.price) }}đ</p>
+              <p v-if="selectedPackage.file_storage_limit" class="text-xs text-gray-600"><strong>Giới hạn lưu trữ:</strong> {{ formatStorage(selectedPackage.file_storage_limit) }}</p>
+              <p v-if="selectedPackage.bandwidth_limit" class="text-xs text-gray-600"><strong>Giới hạn băng thông:</strong> {{ formatStorage(selectedPackage.bandwidth_limit) }}</p>
+              <p v-if="selectedPackage.database_limit" class="text-xs text-gray-600"><strong>Giới hạn cơ sở dữ liệu:</strong> {{ selectedPackage.database_limit }}</p>
+              <p v-if="selectedPackage.api_call_limit" class="text-xs text-gray-600"><strong>Giới hạn API Call:</strong> {{ selectedPackage.api_call_limit }}</p>
+              <p class="text-sm font-bold text-gray-900 mt-2">Tổng tiền: {{ formatPrice(selectedPackage.price) }}đ</p>
+            </div>
             <transition name="fade">
               <div v-if="showPaymentForm" class="mt-4">
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Thông tin thanh toán</h3>
@@ -304,6 +304,28 @@ const showPaymentForm = ref(false);
 const paymentMethod = ref('paypal');
 const urlBase = import.meta.env.VITE_API_URL;
 
+const getToken = () => {
+  return (
+    sessionStorage.getItem('token') ||
+    document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1] ||
+    localStorage.getItem('token')
+  );
+};
+
+const getStoredUser = () => {
+  const userStr = sessionStorage.getItem('user') || localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+};
+
+const clearTokens = () => {
+  sessionStorage.removeItem('token');
+  localStorage.removeItem('token');
+  document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+};
+
 const checkPaymentStatus = async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const paymentId = urlParams.get('paymentId');
@@ -311,13 +333,7 @@ const checkPaymentStatus = async () => {
 
   if (paymentId && payerId) {
     try {
-      const token = sessionStorage.getItem('token') ||
-        document.cookie
-          .split('; ')
-          .find(row => row.startsWith('token='))
-          ?.split('=')[1] ||
-        localStorage.getItem('token');
-
+      const token = getToken();
       const response = await fetch(`${urlBase}/api/user-purchases/paypal/success?paymentId=${paymentId}&PayerID=${payerId}`, {
         method: 'GET',
         headers: {
@@ -332,12 +348,10 @@ const checkPaymentStatus = async () => {
       }
 
       const result = await response.json();
-      // Hiển thị thông báo thành công
       toast.success(`Thanh toán thành công cho gói ${result.package_name}! Tổng tiền: ${formatPrice(result.price)}đ`, {
         timeout: 5000,
       });
 
-      // Xóa query params khỏi URL
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
       console.error('Lỗi xác nhận thanh toán:', error);
@@ -356,15 +370,30 @@ const fetchPackages = async () => {
     if (filters.value.category) params.append('category_id', filters.value.category);
     params.append('status', 'active');
 
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const token = getToken();
+    if (!token) {
+      error.value = 'Vui lòng đăng nhập để xem gói dịch vụ.';
+      return;
+    }
+
     const res = await fetch(`${urlBase}/api/service-packages?${params.toString()}`, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
     });
-    if (!res.ok) throw new Error(`Lỗi ${res.status}`);
-    const data = await res.json();
 
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearTokens();
+        window.location.href = '/login';
+        return;
+      }
+      throw new Error(`Lỗi ${res.status}`);
+    }
+
+    const data = await res.json();
     packages.value = data.data.map(pkg => ({
       id: pkg.package_id,
       name: pkg.name,
@@ -377,10 +406,13 @@ const fetchPackages = async () => {
       database_limit: pkg.database_limit || 'Chưa xác định',
       api_call_limit: pkg.api_call_limit || 'Chưa xác định',
       category_name: categories.value.find(cat => cat.category_id === pkg.category_id)?.name || 'Chưa xác định',
-      status: pkg.status || 'pedning',
+      status: pkg.status || 'pending',
       hostname: pkg.hostname || 'interdata1749627983',
       root_password: pkg.root_password || 'Mật khẩu Root',
       os: pkg.os || 'WPTangToc-OLS-6.4.2',
+      cpu: pkg.cpu,
+      ram: pkg.ram,
+      network: pkg.network,
     }));
   } catch (err) {
     error.value = err.message || 'Lỗi khi tải dữ liệu.';
@@ -391,13 +423,26 @@ const fetchPackages = async () => {
 
 const fetchCategories = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const token = getToken();
+    if (!token) return;
+
     const res = await fetch(`${urlBase}/api/categories`, {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
     });
-    if (!res.ok) throw new Error(`Lỗi ${res.status}`);
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearTokens();
+        window.location.href = '/login';
+        return;
+      }
+      throw new Error(`Lỗi ${res.status}`);
+    }
+
     const data = await res.json();
     categories.value = data.data;
   } catch (err) {
@@ -416,13 +461,10 @@ const formatPrice = (price) => {
 
 const formatStorage = (bytes) => {
   const numericBytes = Number(bytes);
-
   if (isNaN(numericBytes) || numericBytes < 0) {
     return 'Dữ liệu không hợp lệ';
   }
-
   if (numericBytes === 0) return 'Không giới hạn';
-
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let size = numericBytes;
   let unitIndex = 0;
@@ -433,148 +475,134 @@ const formatStorage = (bytes) => {
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 };
 
-
 const processPayment = async () => {
-  if (paymentMethod.value === 'paypal') {
-    let user;
-    try {
-      const tokenFromCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('token='))
-        ?.split('=')[1];
-      const tokenFromSessionStorage = sessionStorage.getItem('token');
-      const tokenFromLocalStorage = localStorage.getItem('token');
-      const token = tokenFromSessionStorage || tokenFromCookie || tokenFromLocalStorage;
+  if (paymentMethod.value !== 'paypal') {
+    toast.error('Phương thức thanh toán không được hỗ trợ.');
+    return;
+  }
 
-      console.log('Token found:', !!token);
-      console.log('Making request to:', `${urlBase}/api/users/me`);
+  let user;
+  try {
+    const token = getToken();
+    if (!token) {
+      toast.error('Vui lòng đăng nhập để tiếp tục.');
+      window.location.href = '/login';
+      return;
+    }
 
-      const response = await fetch(`${urlBase}/api/users/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: 'include',
-      });
+    const response = await fetch(`${urlBase}/api/users/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+    });
 
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error response for /api/users/me:', errorText);
-
-        if (response.status === 401 || response.status === 404) {
-          alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-          sessionStorage.removeItem('token');
-          localStorage.removeItem('token');
-          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-          window.location.href = '/login';
-          return;
-        }
-
-        throw new Error(`Failed to fetch user info: ${response.status} - ${errorText}`);
+    if (!response.ok) {
+      if (response.status === 401) {
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        clearTokens();
+        window.location.href = '/login';
+        return;
       }
-
-      user = await response.json();
-      console.log('User info from server:', user);
-    } catch (error) {
-      console.error('Error fetching user info:', error);
-      alert('Vui lòng đăng nhập để tiếp tục.');
-      return;
+      throw new Error(`Lỗi lấy thông tin người dùng: ${response.status} - ${await response.text()}`);
     }
 
-    if (!user?.user_id || !user?.tenant_id) {
-      console.error('Missing required fields:', {
-        user_id: user?.user_id,
-        tenant_id: user?.tenant_id,
-      });
-      alert('Thông tin người dùng không đầy đủ. Vui lòng đăng nhập lại.');
+    user = await response.json();
+    console.log('API User Response:', user); // Debug log
+  } catch (error) {
+    console.error('Lỗi lấy thông tin người dùng:', error);
+    const storedUser = getStoredUser();
+    if (storedUser && storedUser.user_id && storedUser.tenant_id) {
+      user = storedUser;
+      console.warn('Falling back to stored user data:', user);
+    } else {
+      toast.error('Không thể lấy thông tin người dùng. Vui lòng thử lại.');
       return;
     }
+  }
 
-    // Kiểm tra selectedPackage
-    if (!selectedPackage.value || !selectedPackage.value.id) {
-      alert('Vui lòng chọn một gói trước khi thanh toán.');
-      return;
-    }
+  if (!user?.user_id || !user?.tenant_id) {
+    console.error('Thiếu thông tin người dùng:', { user_id: user?.user_id, tenant_id: user?.tenant_id });
+    toast.error('Thông tin người dùng không đầy đủ. Vui lòng đăng nhập lại.');
+    return;
+  }
 
-    try {
-      console.log('Creating purchase with:', {
+  if (!selectedPackage.value?.id) {
+    toast.error('Vui lòng chọn một gói trước khi thanh toán.');
+    return;
+  }
+
+  try {
+    const token = getToken();
+    const createPurchaseResponse = await fetch(`${urlBase}/api/user-purchases`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify({
         user_id: user.user_id,
         package_id: selectedPackage.value.id,
         tenant_id: user.tenant_id,
+        status: 'pending',
         start_date: new Date().toISOString(),
-      });
+      }),
+    });
 
-      const token = sessionStorage.getItem('token') ||
-        document.cookie
-          .split('; ')
-          .find(row => row.startsWith('token='))
-          ?.split('=')[1] ||
-        localStorage.getItem('token');
-
-      const createPurchaseResponse = await fetch(`${urlBase}/api/user-purchases`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          user_id: user.user_id,
-          package_id: selectedPackage.value.id,
-          tenant_id: user.tenant_id,
-          status: 'pending',
-          start_date: new Date().toISOString(),
-        }),
-      });
-
-      if (!createPurchaseResponse.ok) {
-        const errorText = await createPurchaseResponse.text();
-        console.error('Server error response:', errorText);
-        throw new Error(`Failed to create purchase: ${createPurchaseResponse.status} - ${errorText}`);
+    if (!createPurchaseResponse.ok) {
+      const errorText = await createPurchaseResponse.text();
+      if (createPurchaseResponse.status === 401) {
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        clearTokens();
+        window.location.href = '/login';
+        return;
       }
-
-      const purchaseData = await createPurchaseResponse.json();
-      const purchaseId = purchaseData.purchase_id;
-
-      const payPalResponse = await fetch(`${urlBase}/api/user-purchases/paypal/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: 'include',
-        body: JSON.stringify({ purchaseId }),
-      });
-
-      if (!payPalResponse.ok) {
-        const errorText = await payPalResponse.text();
-        console.error('PayPal error:', errorText);
-        throw new Error('Failed to create PayPal order');
-      }
-
-      const payPalData = await payPalResponse.json();
-      if (payPalData.approval_url) {
-        window.location.href = payPalData.approval_url;
-      }
-    } catch (error) {
-      console.error('Error during payment:', error);
-      alert(`Lỗi khi thanh toán: ${error.message}`);
+      throw new Error(`Lỗi tạo đơn hàng: ${createPurchaseResponse.status} - ${errorText}`);
     }
+
+    const purchaseData = await createPurchaseResponse.json();
+    const purchaseId = purchaseData.purchase_id;
+
+    const payPalResponse = await fetch(`${urlBase}/api/user-purchases/paypal/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+      body: JSON.stringify({ purchaseId }),
+    });
+
+    if (!payPalResponse.ok) {
+      const errorText = await payPalResponse.text();
+      if (payPalResponse.status === 401) {
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        clearTokens();
+        window.location.href = '/login';
+        return;
+      }
+      throw new Error(`Lỗi tạo đơn hàng PayPal: ${payPalResponse.status} - ${errorText}`);
+    }
+
+    const payPalData = await payPalResponse.json();
+    if (payPalData.approval_url) {
+      window.location.href = payPalData.approval_url;
+    } else {
+      throw new Error('Không nhận được URL xác nhận từ PayPal.');
+    }
+  } catch (error) {
+    console.error('Lỗi trong quá trình thanh toán:', error);
+    toast.error(`Lỗi khi thanh toán: ${error.message}`);
+  } finally {
+    showPaymentForm.value = false;
   }
-  showPaymentForm.value = false;
 };
 
 const openModal = (pkg) => {
   selectedPackage.value = pkg;
-  console.log('Selected package:', selectedPackage.value);
-  console.log('Selected package details:', {
-    id: selectedPackage.value.id,
-    name: selectedPackage.value.name,
-    status: selectedPackage.value.status,
-  });
   modalOpen.value = true;
 };
 

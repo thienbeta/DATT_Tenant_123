@@ -478,10 +478,9 @@ watch(() => modal.value.servicePackage.package_type, (newType) => {
     modal.value.servicePackage.price = 0;
   }
 });
-
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 const fetchServicePackages = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -504,7 +503,6 @@ const fetchServicePackages = async () => {
 
 const fetchCategories = async () => {
   try {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -529,7 +527,9 @@ const createServicePackage = async () => {
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+       },
       body: JSON.stringify(modal.value.servicePackage),
     });
     if (!res.ok) {
@@ -559,7 +559,9 @@ const updateServicePackage = async () => {
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages/${modal.value.servicePackage.package_id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+       },
       body: JSON.stringify(modal.value.servicePackage),
     });
     if (!res.ok) throw new Error('Lỗi khi cập nhật');
@@ -598,7 +600,9 @@ const moveToTrash = async (servicePackage: ServicePackage) => {
       const updatedPackage = { ...servicePackage, status: 'deleted' };
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages/${servicePackage.package_id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+         },
         body: JSON.stringify(updatedPackage),
       });
       if (!res.ok) throw new Error('Lỗi khi cập nhật');
@@ -637,7 +641,9 @@ const restoreServicePackage = async (servicePackage: ServicePackage) => {
       const updatedPackage = { ...servicePackage, status: 'active' };
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages/${servicePackage.package_id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+         },
         body: JSON.stringify(updatedPackage),
       });
       if (!res.ok) throw new Error('Lỗi khi cập nhật');
@@ -675,6 +681,7 @@ const permanentlyDelete = async (servicePackage: ServicePackage) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages/${servicePackage.package_id}`, {
         method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Lỗi xóa');
       await fetchServicePackages();

@@ -16,7 +16,6 @@ import ServiceDataPage from '../views/ServiceDataPage.vue'
 import TenantUserDashboard from '../views/TenantUserDashboard.vue'
 import PaymentSuccess from '../views/PaymentSuccess.vue';
 import AboutPage from '../views/AboutPage.vue'
-import CategoryPage from '../views/CategoryPage.vue';
 
 const routes = [
   {
