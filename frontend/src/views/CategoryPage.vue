@@ -331,7 +331,7 @@ const openCreateModal = () => {
       name: '',
       description: '',
       status: 'active',
-      parent_id: null,
+      parent_id: undefined,
     },
   };
 };
@@ -365,9 +365,13 @@ const fetchCategories = async () => {
 
 const createCategory = async () => {
   try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(modal.value.category),
     });
     if (!res.ok) {
@@ -433,10 +437,14 @@ const moveToTrash = async (category: Category) => {
   });
   if (result.isConfirmed) {
     try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const updatedCategory = { ...category, status: 'deleted' };
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories/${category.category_id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(updatedCategory),
       });
       if (!res.ok) throw new Error('Lỗi khi cập nhật');
@@ -511,8 +519,12 @@ const permanentlyDelete = async (category: Category) => {
   });
   if (result.isConfirmed) {
     try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories/${category.category_id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       if (!res.ok) throw new Error('Lỗi xóa');
       await fetchCategories();

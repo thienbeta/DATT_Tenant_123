@@ -458,7 +458,7 @@ const openCreateModal = () => {
       end_date: null,
       status: 'active',
       billing_cycle: 'indefinite',
-      category_id: null,
+      category_id: undefined,
     },
   };
 };
@@ -527,9 +527,13 @@ const fetchCategories = async () => {
 
 const createServicePackage = async () => {
   try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(modal.value.servicePackage),
     });
     if (!res.ok) {
