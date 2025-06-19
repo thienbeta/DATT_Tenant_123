@@ -19,6 +19,7 @@ router.get('/invoice/:purchaseId', userPurchaseController.sendInvoiceEmail);
 router.get('/paypal/success', userPurchaseController.paypalSuccess);
 router.post('/paypal/success', userPurchaseController.paypalSuccess); // Giữ POST để tương thích
 router.post('/paypal/create', userPurchaseController.createPayPalOrder);
-router.post('/paypal/cancel', userPurchaseController.paypalCancel);
+router.get('/invoice-pdf/:purchaseId', userPurchaseController.downloadInvoicePDF);
+router.get('/paypal/cancel', userPurchaseController.paypalCancel);
 
 module.exports = router;
