@@ -16,6 +16,12 @@ router.delete('/:id', authMiddleware, controller.delete); // DELETE user
 router.put('/:id/restore', authMiddleware, controller.restoreCustomer); // Restore user
 
 // Profile management
+router.get('/me', authMiddleware, controller.getCurrentUser)
+
+router.get('/', controller.getAll);                  // GET all users
+router.get('/:id', controller.getById);              // GET user by ID
+router.post('/', controller.create);                 // POST new user
+router.put('/:id', controller.update);               // PUT update user
 router.put('/profile', authMiddleware, controller.updateProfile);
 
 // Thêm các route quản lý khách hàng cho tenant
@@ -29,5 +35,6 @@ router.put('/users/:id/restore', authMiddleware, controller.restoreCustomer); //
 
 // Thống kê người dùng theo tenant
 router.get('/statistics/:tenant_id', authMiddleware, controller.getUserStatistics);
+
 
 module.exports = router;

@@ -14,8 +14,10 @@ app.use(cors({
   credentials: true // Cho phép gửi cookie
 }));
 
-// Middleware để xử lý JSON
-app.use(express.json());
+const redisClient = createClient({
+  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
+});
+redisClient.on('error', (err) => console.error('Redis error:', err));
 
 // Kết nối Redis
 // (async () => { // Xóa đoạn này
@@ -26,6 +28,16 @@ app.use(express.json());
 //     console.error('Lỗi kết nối Redis:', error);
 //   }
 // })();
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log('✅ Đã kết nối Redis');
+  } catch (error) {
+    console.error('❌ Lỗi kết nối Redis, tiếp tục mà không dùng Redis:', error);
+  }
+})();
+
+app.use(express.json());
 
 // Khởi tạo object db để chứa các model
 const db = {};
