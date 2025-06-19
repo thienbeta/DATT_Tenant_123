@@ -100,7 +100,7 @@ const goHome = () => {
 };
 
 const downloadReceipt = () => {
-  // Logic để tải hóa đơn
+    window.location.href = `http://localhost:3000/api/user-purchases/invoice-pdf/${purchaseId.value}`;
   console.log('Downloading receipt...');
 };
 

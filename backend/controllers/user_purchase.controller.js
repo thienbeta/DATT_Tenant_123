@@ -1,9 +1,11 @@
 const { UserPurchase, TenantOfferedPackage } = require('../models');
+const path = require('path');
 const nodemailer = require('nodemailer');
 const paypal = require('paypal-rest-sdk');
+const PDFDocument = require('pdfkit');
 
 paypal.configure({
-  mode: process.env.PAYPAL_MODE || 'sandbox', // 'sandbox' hoặc 'live'
+  mode: process.env.PAYPAL_MODE || 'sandbox', 
   client_id: process.env.PAYPAL_CLIENT_ID,
   client_secret: process.env.PAYPAL_CLIENT_SECRET,
 });
@@ -99,7 +101,7 @@ exports.createPayPalOrder = async (req, res) => {
 
   try {
     const purchase = await UserPurchase.findByPk(purchaseId, {
-      include: ['package'], // Đảm bảo tải dữ liệu package
+      include: ['package'], 
     });
     if (!purchase || purchase.status !== 'pending') {
       return res.status(400).json({ message: 'Invalid purchase' });
@@ -213,8 +215,7 @@ exports.paypalSuccess = async (req, res) => {
 
       try {
       console.log('Creating tenant offered package record...');
-      
-      // Kiểm tra xem đã có record trong tenant_offered_packages chưa
+
       const existingOfferedPackage = await TenantOfferedPackage.findOne({
         where: {
           tenant_id: purchase.tenant_id,
@@ -283,7 +284,6 @@ exports.paypalSuccess = async (req, res) => {
       }
     } catch (emailError) {
       console.error('Error sending invoice email:', emailError);
-      // Tiếp tục trả về thành công dù email thất bại
     }
 
     const frontendUrl = `http://localhost:5173/payment-success?purchase_id=${purchase.purchase_id}&package_name=${encodeURIComponent(purchase.package.name)}&price=${purchase.package.price}`;
@@ -297,17 +297,67 @@ exports.paypalSuccess = async (req, res) => {
     });
   }
 };
-// Xử lý thanh toán bị hủy
-exports.paypalCancel = async (req, res) => {
-  const { purchaseId } = req.body;
+
+exports.downloadInvoicePDF = async (req, res) => {
+  const { purchaseId } = req.params;
 
   try {
-    const purchase = await UserPurchase.findByPk(purchaseId);
+    const purchase = await UserPurchase.findByPk(purchaseId, {
+      include: ['user', 'package'],
+    });
+
+    if (!purchase) {
+      return res.status(404).json({ message: 'Purchase not found' });
+    }
+
+    const doc = new PDFDocument();
+
+    res.setHeader('Content-disposition', `attachment; filename=invoice_${purchaseId}.pdf`);
+    res.setHeader('Content-type', 'application/pdf');
+
+    doc.pipe(res);
+
+    const fontPath = path.join(__dirname, '../fonts/NotoSans-Regular.ttf');
+    doc.font(fontPath);
+
+    doc.fontSize(20).text('Hóa đơn', { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(14).text(`Mã đơn hàng: ${purchase.purchase_id}`);
+    doc.text(`Email: ${purchase.user.email}`);
+    doc.text(`Gói mua: ${purchase.package.name}`);
+    doc.text(`Giá: $${purchase.package.price}`);
+    doc.text(`Ngày mua: ${purchase.purchase_date.toLocaleString()}`);
+    doc.text(`Ngày bắt đầu: ${purchase.start_date.toLocaleString()}`);
+    doc.text(`Ngày hết hạn: ${purchase.end_date ? purchase.end_date.toLocaleString() : 'Không xác định'}`);
+
+    doc.moveDown();
+    doc.text('Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!', { align: 'center' });
+
+    doc.end();
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ message: 'Error generating PDF', error: error.message });
+  }
+};
+
+exports.paypalCancel = async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    const purchase = await UserPurchase.findOne({
+      where: { payment_id: token }
+    });
+
     if (purchase) {
       await purchase.update({ status: 'canceled' });
     }
-    res.status(200).json({ message: 'Payment canceled' });
+
+    const frontendUrl = 'http://localhost:5173/shop';
+    return res.redirect(frontendUrl);
   } catch (error) {
-    res.status(500).json({ message: 'Error canceling payment', error: error.message });
+    console.error('Error canceling payment:', error);
+    return res.status(500).json({ message: 'Error canceling payment', error: error.message });
   }
 };
+
