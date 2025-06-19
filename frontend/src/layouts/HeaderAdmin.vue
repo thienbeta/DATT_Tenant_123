@@ -14,12 +14,12 @@
         Tổng quan
       </RouterLink>
 
-      <RouterLink to="/categories" :class="navClass('/categories')">
+      <RouterLink v-if="isGlobalAdmin" to="/categories" :class="navClass('/categories')">
         <FolderKanban class="tw-w-4 tw-h-4 tw-text-orange-500" />
         Quản lý danh mục
       </RouterLink>
 
-      <RouterLink to="/package" :class="navClass('/package')">
+      <RouterLink v-if="isGlobalAdmin" to="/package" :class="navClass('/package')">
         <Boxes class="tw-w-4 tw-h-4 tw-text-green-600" />
         Quản lý sản phẩm
       </RouterLink>
@@ -39,14 +39,9 @@
         Khách hàng
       </RouterLink>
 
-      <RouterLink to="/inventory" :class="navClass('/inventory')">
-        <Warehouse class="tw-w-4 tw-h-4 tw-text-teal-600" />
-        Tồn kho
-      </RouterLink>
-
-      <RouterLink to="/promotions" :class="navClass('/promotions')">
-        <Gift class="tw-w-4 tw-h-4 tw-text-pink-500" />
-        Khuyến mãi
+      <RouterLink to="/service-data" :class="navClass('/service-data')">
+        <Database class="tw-w-4 tw-h-4 tw-text-cyan-500" />
+        Dữ liệu dịch vụ
       </RouterLink>
 
       <RouterLink to="/shop" :class="navClass('/shop')">
@@ -103,7 +98,8 @@ import {
   Settings,
   User,
   LogOut,
-  Store
+  Store,
+  Database
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -115,4 +111,9 @@ const navClass = (path: string) => {
   const inactive = 'tw-border-transparent tw-text-gray-700 hover:tw-border-[#086df9] hover:tw-text-[#086df9]'
   return [base, route.path === path ? active : inactive]
 }
+
+// Lấy role từ localStorage/sessionStorage
+const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+const user = userStr ? JSON.parse(userStr) : null;
+const isGlobalAdmin = user && user.role === 'global_admin';
 </script>

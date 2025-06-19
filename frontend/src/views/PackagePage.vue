@@ -12,7 +12,7 @@
           Khôi phục
         </button>
       </div>
-      <button @click="openCreateModal" class="tw-bg-[#086df9] tw-text-white tw-px-4 tw-py-2 tw-rounded tw-flex tw-items-center hover:tw-bg-blue-700">
+      <button v-if="isGlobalAdmin" @click="openCreateModal" class="tw-bg-[#086df9] tw-text-white tw-px-4 tw-py-2 tw-rounded tw-flex tw-items-center hover:tw-bg-blue-700">
         <Plus class="tw-w-4 tw-h-4 tw-mr-2" /> Thêm gói dịch vụ
       </button>
     </div>
@@ -76,16 +76,16 @@
                 <button @click="openModal('view', servicePackage)" class="tw-mr-2 tw-text-green-600">
                   <Eye class="tw-w-5 tw-h-5" />
                 </button>
-                <button v-if="currentTab === 'list'" @click="openModal('edit', servicePackage)" class="tw-mr-2 tw-text-[#086df9]">
+                <button v-if="isGlobalAdmin && currentTab === 'list'" @click="openModal('edit', servicePackage)" class="tw-mr-2 tw-text-[#086df9]">
                   <Edit class="tw-w-5 tw-h-5" />
                 </button>
-                <button v-if="currentTab === 'list'" @click="moveToTrash(servicePackage)" class="tw-text-red-600">
+                <button v-if="isGlobalAdmin && currentTab === 'list'" @click="moveToTrash(servicePackage)" class="tw-text-red-600">
                   <Trash2 class="tw-w-5 tw-h-5" />
                 </button>
-                <button v-if="currentTab === 'restore'" @click="restoreServicePackage(servicePackage)" class="tw-mr-2 tw-text-[#086df9]">
+                <button v-if="isGlobalAdmin && currentTab === 'restore'" @click="restoreServicePackage(servicePackage)" class="tw-mr-2 tw-text-[#086df9]">
                   <RefreshCcw class="tw-w-5 tw-h-5" />
                 </button>
-                <button v-if="currentTab === 'restore'" @click="permanentlyDelete(servicePackage)" class="tw-text-red-600">
+                <button v-if="isGlobalAdmin && currentTab === 'restore'" @click="permanentlyDelete(servicePackage)" class="tw-text-red-600">
                   <Trash2 class="tw-w-5 tw-h-5" />
                 </button>
               </div>
@@ -383,6 +383,11 @@ const currentPage = ref(1);
 const itemsPerPage = 20;
 const currentTab = ref('list');
 
+// Lấy role từ localStorage/sessionStorage
+const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+const user = userStr ? JSON.parse(userStr) : null;
+const isGlobalAdmin = computed(() => user && user.role === 'global_admin');
+
 // Map categories to quickly look up names by ID
 const categoriesMap = computed(() => {
   return categories.value.reduce((map, cat) => {
@@ -476,7 +481,12 @@ watch(() => modal.value.servicePackage.package_type, (newType) => {
 
 const fetchServicePackages = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages`);
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/service-packages`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (!res.ok) throw new Error('Lỗi khi gọi API');
     const { data } = await res.json();
     servicePackages.value = data;
@@ -494,7 +504,12 @@ const fetchServicePackages = async () => {
 
 const fetchCategories = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories`);
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/categories`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     if (!res.ok) throw new Error('Lỗi khi gọi API');
     const { data } = await res.json();
     categories.value = data;
