@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const express = require('express');
+const cors = require('cors');
 const { User } = require('../models');
 
 const authMiddleware = async (req, res, next) => {
@@ -55,7 +57,7 @@ const authMiddleware = async (req, res, next) => {
     // Kiểm tra xem có user hợp lệ không
     if (!user) {
       console.log('No valid user found');
-      return res.status(401).json({
+      return res.status(403).json({
         error: 'Không tìm thấy thông tin xác thực',
         debug: {
           hasAuthHeader: !!authHeader,

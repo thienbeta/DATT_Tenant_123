@@ -149,14 +149,15 @@ const paypalExecute = (paymentId, execute_payment_json) => {
 };
 
 exports.paypalSuccess = async (req, res) => {
-  const { paymentId, PayerID } = req.query;
+  const { paymentId, PayerID, token } = req.query; // Lấy từ query params
 
   try {
-    console.log('Processing PayPal success:', { paymentId, PayerID });
+    console.log('Processing PayPal success:', { paymentId, PayerID, token });
 
+    // Tìm purchase dựa trên paymentId
     const purchase = await UserPurchase.findOne({
       where: { payment_id: paymentId },
-      include: ['user', 'package'] 
+      include: ['user', 'package']
     });
     console.log('Purchase found:', purchase ? 'YES' : 'NO');
 
@@ -165,45 +166,43 @@ exports.paypalSuccess = async (req, res) => {
       return res.status(400).json({ message: 'Purchase not found' });
     }
 
-    console.log('Purchase status:', purchase.status);
     if (purchase.status !== 'pending') {
       console.log('Invalid purchase status:', purchase.status);
       return res.status(400).json({ message: 'Invalid purchase status' });
     }
 
-    // Execute PayPal payment
+    // Xác minh thanh toán với PayPal
     const execute_payment_json = {
       payer_id: PayerID,
     };
 
     console.log('Executing PayPal payment...');
     const payment = await paypalExecute(paymentId, execute_payment_json);
-    console.log('PayPal payment executed successfully');
+    console.log('PayPal payment executed successfully:', payment);
 
-   const startDate = new Date();
+    const startDate = new Date();
     let endDate;
     const billingCycle = purchase.package.billing_cycle.toLowerCase();
 
     switch (billingCycle) {
       case 'yearly':
-        endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); 
+        endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         break;
       case 'quarterly':
-        endDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); 
+        endDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
         break;
       case 'monthly':
-        endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); 
+        endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         break;
       case 'one-time':
       case 'indefinite':
         endDate = null;
         break;
       default:
-        endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); 
+        endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     }
 
-    // Update purchase
-   console.log('Updating purchase status...');
+    // Cập nhật purchase
     await purchase.update({
       status: 'completed',
       purchase_date: new Date(),
@@ -213,20 +212,14 @@ exports.paypalSuccess = async (req, res) => {
     });
     console.log('Purchase updated successfully');
 
-      try {
-      console.log('Creating tenant offered package record...');
-
+    // Cập nhật hoặc tạo TenantOfferedPackage
+    try {
       const existingOfferedPackage = await TenantOfferedPackage.findOne({
-        where: {
-          tenant_id: purchase.tenant_id,
-          package_id: purchase.package_id
-        }
+        where: { tenant_id: purchase.tenant_id, package_id: purchase.package_id }
       });
 
       if (existingOfferedPackage) {
-        await existingOfferedPackage.update({
-          status: 'active'
-        });
+        await existingOfferedPackage.update({ status: 'active' });
         console.log('Updated existing tenant offered package to active');
       } else {
         await TenantOfferedPackage.create({
@@ -240,9 +233,8 @@ exports.paypalSuccess = async (req, res) => {
       console.error('Error saving to tenant_offered_packages:', tenantPackageError);
     }
 
-    // Send invoice email
+    // Gửi email hóa đơn
     try {
-      console.log('Sending invoice email...');
       const purchaseWithDetails = await UserPurchase.findByPk(purchase.purchase_id, {
         include: ['user', 'package'],
       });
@@ -252,10 +244,7 @@ exports.paypalSuccess = async (req, res) => {
           host: process.env.SMTP_SERVER,
           port: process.env.SMTP_PORT,
           secure: false,
-          auth: {
-            user: process.env.SENDER_EMAIL,
-            pass: process.env.SENDER_PASSWORD,
-          },
+          auth: { user: process.env.SENDER_EMAIL, pass: process.env.SENDER_PASSWORD },
         });
 
         const mailOptions = {
@@ -279,8 +268,6 @@ exports.paypalSuccess = async (req, res) => {
 
         await transporter.sendMail(mailOptions);
         console.log('Invoice email sent successfully');
-      } else {
-        console.log('No user or package details found for purchase:', purchase.purchase_id);
       }
     } catch (emailError) {
       console.error('Error sending invoice email:', emailError);

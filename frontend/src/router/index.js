@@ -94,7 +94,7 @@ router.beforeEach((to, from, next) => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     sessionStorage.removeItem('token')
-    sessionStorage.removeItem('user')
+    sessionStorage.removeItem('user') 
     return next('/login')
   }
 

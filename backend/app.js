@@ -36,6 +36,7 @@ app.use(express.json());
 const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
+db.redisClient = redisClient; 
 
 // Import các model
 db.Tenant = require('./models/tenant.model')(sequelize, Sequelize);
