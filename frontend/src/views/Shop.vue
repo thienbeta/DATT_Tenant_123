@@ -612,6 +612,13 @@ const closeModal = () => {
 };
 
 onMounted(() => {
+  // Kiểm tra quyền truy cập
+  const user = getStoredUser();
+  if (!user || (user.role !== 'tenant_admin' && user.role !== 'global_admin')) {
+    error.value = 'Bạn không có quyền truy cập trang này. Chỉ tenant_admin và global_admin mới có thể truy cập Shop.';
+    return;
+  }
+
   fetchPackages();
   fetchCategories();
   checkPaymentStatus();

@@ -44,7 +44,7 @@
         Dữ liệu dịch vụ
       </RouterLink>
 
-      <RouterLink to="/shop" :class="navClass('/shop')">
+      <RouterLink v-if="canAccessShop" to="/shop" :class="navClass('/shop')">
         <Store class="tw-w-4 tw-h-4 tw-text-blue-500" />
         Cửa hàng
       </RouterLink>
@@ -116,4 +116,7 @@ const navClass = (path: string) => {
 const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
 const user = userStr ? JSON.parse(userStr) : null;
 const isGlobalAdmin = user && user.role === 'global_admin';
+
+// Add this line to define canAccessShop
+const canAccessShop = isGlobalAdmin || user.role === 'tenant_admin';
 </script>

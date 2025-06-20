@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
@@ -84,10 +83,11 @@ const router = createRouter({
   routes
 });
 
-// Global navigation guard cho tenant_user
+// Global navigation guard cho tenant_user và tenant_admin
 router.beforeEach((to, from, next) => {
   const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
 
   // Xử lý logout
   if (to.path === '/logout') {
@@ -98,17 +98,54 @@ router.beforeEach((to, from, next) => {
     return next('/login')
   }
 
+  // Các route cho phép truy cập mà không cần đăng nhập
+  const publicRoutes = [
+    '/login', '/register', '/forgot-password', '/logout'
+  ]
+
+  // Các route yêu cầu đăng nhập
+  const protectedRoutes = [
+    '/profile', '/change-password', '/tenant', '/categories', 
+    '/customers', '/service-data', '/orders', '/inventory', '/promotions', 
+    '/reports', '/settings', '/privacy-policy', '/terms'
+  ]
+
+  // Các route chỉ cho phép tenant_admin và global_admin
+  const adminOnlyRoutes = [
+    '/shop'
+  ]
+
+  // Kiểm tra nếu route yêu cầu đăng nhập nhưng user chưa đăng nhập
+  if ((protectedRoutes.includes(to.path) || adminOnlyRoutes.includes(to.path)) && (!user || !token)) {
+    return next('/login')
+  }
+
+  // Kiểm tra quyền truy cập Shop - chỉ cho phép tenant_admin và global_admin
+  if (adminOnlyRoutes.includes(to.path)) {
+    if (!user || (user.role !== 'tenant_admin' && user.role !== 'global_admin')) {
+      return next('/') // Redirect về home nếu không có quyền
+    }
+  }
+
   // Các route cho phép tenant_user truy cập
   const allowedTenantUserRoutes = [
     '/login', '/register', '/forgot-password', '/logout'
   ]
 
+  // Xử lý tenant_user - chỉ cho phép truy cập /tenant-user routes
   if (user && user.role === 'tenant_user') {
-    // Nếu không phải route /tenant-user hoặc các route cho phép, redirect về dashboard user
     if (!to.path.startsWith('/tenant-user') && !allowedTenantUserRoutes.includes(to.path)) {
       return next('/tenant-user/dashboard')
     }
   }
+
+  // Xử lý tenant_admin - cho phép truy cập tất cả routes trừ /tenant-user
+  if (user && user.role === 'tenant_admin') {
+    if (to.path.startsWith('/tenant-user')) {
+      return next('/') // Redirect về home nếu cố truy cập tenant-user routes
+    }
+  }
+
   next()
 })
 
