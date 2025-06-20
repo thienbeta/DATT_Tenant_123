@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
@@ -16,6 +15,7 @@ import ServiceDataPage from '../views/ServiceDataPage.vue'
 import TenantUserDashboard from '../views/TenantUserDashboard.vue'
 import PaymentSuccess from '../views/PaymentSuccess.vue';
 import AboutPage from '../views/AboutPage.vue'
+import PurchasesPage from '../views/PurchasesPage.vue'
 
 const routes = [
   {
@@ -55,6 +55,7 @@ const routes = [
       { path: 'categories', name: 'Category', component: CategoryPage },
       { path: 'customers', name: 'Customer', component: CustomerPage },
       { path: 'service-data', name: 'ServiceData', component: ServiceDataPage },
+      { path: 'purchases', name: 'Purchases', component: PurchasesPage },
       { path: 'orders', name: 'Orders', component: HomePage },
       { path: 'inventory', name: 'Inventory', component: HomePage },
       { path: 'promotions', name: 'Promotions', component: HomePage },
@@ -91,11 +92,11 @@ router.beforeEach((to, from, next) => {
 
   // Xử lý logout
   if (to.path === '/logout') {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    sessionStorage.removeItem('token')
-    sessionStorage.removeItem('user') 
-    return next('/login')
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    return next('/login');
   }
 
   // Các route cho phép tenant_user truy cập

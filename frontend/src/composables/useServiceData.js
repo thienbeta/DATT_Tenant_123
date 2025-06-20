@@ -13,9 +13,9 @@ const pagination = ref({
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
-// Lấy token từ localStorage
+// Lấy token từ localStorage hoặc sessionStorage
 const getAuthToken = () => {
-  return localStorage.getItem('token')
+  return sessionStorage.getItem('token') || localStorage.getItem('token');
 }
 
 // Cấu hình axios với token
@@ -59,7 +59,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const response = await apiClient.get('/service-data', { params })
+      const response = await apiClient.get('/api/service-data', { params })
       serviceData.value = response.data.data
       pagination.value = {
         page: response.data.page,
@@ -81,7 +81,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const response = await apiClient.get(`/service-data/${id}`)
+      const response = await apiClient.get(`/api/service-data/${id}`)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.error || 'Có lỗi xảy ra khi tải dữ liệu'
@@ -98,7 +98,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const response = await apiClient.post('/service-data', data)
+      const response = await apiClient.post('/api/service-data', data)
       await fetchServiceData() // Refresh danh sách
       return response.data
     } catch (err) {
@@ -116,7 +116,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const response = await apiClient.put(`/service-data/${id}`, data)
+      const response = await apiClient.put(`/api/service-data/${id}`, data)
       await fetchServiceData() // Refresh danh sách
       return response.data
     } catch (err) {
@@ -134,7 +134,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      await apiClient.delete(`/service-data/${id}`)
+      await apiClient.delete(`/api/service-data/${id}`)
       await fetchServiceData() // Refresh danh sách
     } catch (err) {
       error.value = err.response?.data?.error || 'Có lỗi xảy ra khi xóa dữ liệu'
@@ -151,7 +151,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const response = await apiClient.get('/service-data/stats/tenant')
+      const response = await apiClient.get('/api/service-data/stats/tenant')
       return response.data
     } catch (err) {
       error.value = err.response?.data?.error || 'Có lỗi xảy ra khi tải thống kê'
@@ -168,7 +168,7 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const url = userId ? `/service-data/stats/user/${userId}` : '/service-data/stats/user'
+      const url = userId ? `/api/service-data/stats/user/${userId}` : '/api/service-data/stats/user'
       const response = await apiClient.get(url)
       return response.data
     } catch (err) {
@@ -186,11 +186,28 @@ export function useServiceData() {
     error.value = null
     
     try {
-      const response = await apiClient.post('/service-data/check-limits', data)
+      const response = await apiClient.post('/api/service-data/check-limits', data)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.error || 'Có lỗi xảy ra khi kiểm tra giới hạn'
       console.error('Error checking usage limits:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Kiểm tra trạng thái kích hoạt service data của tenant
+  const checkTenantActivation = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await apiClient.get('/api/service-data/activation/check')
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.error || 'Có lỗi xảy ra khi kiểm tra trạng thái kích hoạt'
+      console.error('Error checking tenant activation:', err)
       throw err
     } finally {
       loading.value = false
@@ -227,6 +244,7 @@ export function useServiceData() {
     fetchTenantStats,
     fetchUserStats,
     checkUsageLimits,
+    checkTenantActivation,
     formatFileSize,
     formatBandwidth
   }

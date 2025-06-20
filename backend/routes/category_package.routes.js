@@ -8,8 +8,8 @@ router.use(authMiddleware);
 
 // Define routes for category packages
 router.post('/', checkRole(['global_admin']), controller.createCategory);
-router.get('/', checkRole(['global_admin']), controller.getAllCategories);
-router.get('/:id', checkRole(['global_admin']), controller.getCategoryById);
+router.get('/', checkRole(['global_admin', 'tenant_admin', 'tenant_user']), controller.getAllCategories);
+router.get('/:id', checkRole(['global_admin', 'tenant_admin', 'tenant_user']), controller.getCategoryById);
 router.put('/:id', checkRole(['global_admin']), controller.updateCategory);
 router.delete('/:id', checkRole(['global_admin']), controller.deleteCategory);
 

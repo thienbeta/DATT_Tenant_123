@@ -9,9 +9,9 @@ exports.getAll = async (req, res) => {
     
     const whereClause = {};
     
-    // Filter theo tenant (từ middleware)
-    if (req.tenantFilter) {
-      whereClause.tenant_id = req.tenantFilter.tenant_id;
+    // Filter theo tenant dựa trên role của user
+    if (req.user.role !== 'global_admin') {
+      whereClause.tenant_id = req.user.tenant_id;
     }
     
     // Filter theo status
@@ -28,6 +28,8 @@ exports.getAll = async (req, res) => {
     if (user_id) {
       whereClause.user_id = user_id;
     }
+
+    console.log('Service data query:', { whereClause, user: req.user.user_id, role: req.user.role });
 
     const data = await ServiceData.findAndCountAll({
       where: whereClause,
@@ -52,6 +54,8 @@ exports.getAll = async (req, res) => {
       offset: parseInt(offset),
       order: [['created_at', 'DESC']]
     });
+
+    console.log('Service data result:', { count: data.count, rows: data.rows.length });
 
     res.status(200).json({
       data: data.rows,
@@ -352,6 +356,75 @@ exports.checkUsageLimits = async (req, res) => {
     });
   } catch (error) {
     console.error('Error checking usage limits:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Kiểm tra trạng thái kích hoạt service data của tenant
+exports.checkTenantActivation = async (req, res) => {
+  try {
+    const tenantId = req.user.tenant_id;
+    
+    if (!tenantId) {
+      return res.status(400).json({ error: 'Tenant ID is required' });
+    }
+    
+    // Kiểm tra xem tenant có service_data active không
+    const activeServiceData = await ServiceData.findOne({
+      where: {
+        tenant_id: tenantId,
+        status: 'active'
+      },
+      include: [
+        {
+          model: ServicePackage,
+          as: 'package',
+          attributes: ['package_id', 'name', 'file_storage_limit', 'bandwidth_limit', 'database_limit', 'api_call_limit']
+        }
+      ]
+    });
+    
+    if (!activeServiceData) {
+      return res.status(200).json({
+        isActivated: false,
+        message: 'No active service data found for this tenant'
+      });
+    }
+    
+    // Tính tổng sử dụng của tenant
+    const tenantUsage = await ServiceData.findAll({
+      where: {
+        tenant_id: tenantId,
+        status: 'active'
+      },
+      attributes: [
+        [Sequelize.fn('SUM', Sequelize.col('file_size')), 'total_file_size'],
+        [Sequelize.fn('SUM', Sequelize.col('bandwidth_used')), 'total_bandwidth'],
+        [Sequelize.fn('SUM', Sequelize.col('database_used')), 'total_database'],
+        [Sequelize.fn('SUM', Sequelize.col('api_calls_used')), 'total_api_calls']
+      ]
+    });
+    
+    const usage = tenantUsage[0];
+    
+    res.status(200).json({
+      isActivated: true,
+      package: activeServiceData.package,
+      usage: {
+        file_size: parseInt(usage.dataValues.total_file_size) || 0,
+        bandwidth_used: parseInt(usage.dataValues.total_bandwidth) || 0,
+        database_used: parseInt(usage.dataValues.total_database) || 0,
+        api_calls_used: parseInt(usage.dataValues.total_api_calls) || 0
+      },
+      limits: {
+        file_storage_limit: activeServiceData.package.file_storage_limit,
+        bandwidth_limit: activeServiceData.package.bandwidth_limit,
+        database_limit: activeServiceData.package.database_limit,
+        api_call_limit: activeServiceData.package.api_call_limit
+      }
+    });
+  } catch (error) {
+    console.error('Error checking tenant activation:', error);
     res.status(500).json({ error: error.message });
   }
 };

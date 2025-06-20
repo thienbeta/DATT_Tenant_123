@@ -1,8 +1,9 @@
-const { UserPurchase, TenantOfferedPackage } = require('../models');
+const { UserPurchase, TenantOfferedPackage, ServiceData, User, ServicePackage } = require('../models');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const paypal = require('paypal-rest-sdk');
 const PDFDocument = require('pdfkit');
+const { Sequelize } = require('sequelize');
 
 paypal.configure({
   mode: process.env.PAYPAL_MODE || 'sandbox', 
@@ -12,9 +13,68 @@ paypal.configure({
 
 exports.getAll = async (req, res) => {
   try {
-    const purchases = await UserPurchase.findAll();
-    res.status(200).json(purchases);
+    const { page = 1, limit = 10, status, tenant_id, user_id, package_id } = req.query;
+    const offset = (page - 1) * limit;
+    
+    const whereClause = {};
+    
+    // Filter theo role của user
+    if (req.user.role === 'tenant_admin') {
+      // Tenant admin chỉ thấy đơn hàng của tenant mình
+      whereClause.tenant_id = req.user.tenant_id;
+    } else if (req.user.role === 'tenant_user') {
+      // Tenant user chỉ thấy đơn hàng của mình
+      whereClause.user_id = req.user.user_id;
+    }
+    // Global admin thấy tất cả đơn hàng
+    
+    // Filter theo status
+    if (status) {
+      whereClause.status = status;
+    }
+    
+    // Filter theo tenant_id (chỉ global admin)
+    if (tenant_id && req.user.role === 'global_admin') {
+      whereClause.tenant_id = tenant_id;
+    }
+    
+    // Filter theo user_id
+    if (user_id) {
+      whereClause.user_id = user_id;
+    }
+    
+    // Filter theo package_id
+    if (package_id) {
+      whereClause.package_id = package_id;
+    }
+
+    const purchases = await UserPurchase.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['user_id', 'email', 'role', 'tenant_id']
+        },
+        {
+          model: ServicePackage,
+          as: 'package',
+          attributes: ['package_id', 'name', 'description', 'price', 'billing_cycle']
+        }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['purchase_date', 'DESC']]
+    });
+
+    res.status(200).json({
+      data: purchases.rows,
+      total: purchases.count,
+      page: parseInt(page),
+      totalPages: Math.ceil(purchases.count / limit)
+    });
   } catch (error) {
+    console.error('Error getting purchases:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -229,6 +289,49 @@ exports.paypalSuccess = async (req, res) => {
         });
         console.log('Created new tenant offered package record');
       }
+
+      // Kích hoạt service_data cho tất cả người dùng trong tenant
+      try {
+        // Lấy tất cả người dùng trong tenant
+        const tenantUsers = await User.findAll({
+          where: { tenant_id: purchase.tenant_id }
+        });
+
+        // Lấy thông tin package để biết giới hạn
+        const packageInfo = await ServicePackage.findByPk(purchase.package_id);
+
+        if (tenantUsers.length > 0 && packageInfo) {
+          // Tạo hoặc cập nhật service_data cho từng user
+          for (const user of tenantUsers) {
+            const [serviceData, created] = await ServiceData.findOrCreate({
+              where: {
+                tenant_id: purchase.tenant_id,
+                user_id: user.user_id,
+                package_id: purchase.package_id
+              },
+              defaults: {
+                object_key: `tenant_${purchase.tenant_id}_user_${user.user_id}`,
+                file_size: 0,
+                bandwidth_used: 0,
+                database_used: 0,
+                api_calls_used: 0,
+                status: 'active'
+              }
+            });
+
+            if (!created) {
+              // Nếu đã tồn tại, cập nhật status thành active
+              await serviceData.update({ status: 'active' });
+            }
+
+            console.log(`Service data ${created ? 'created' : 'activated'} for user ${user.user_id} in tenant ${purchase.tenant_id}`);
+          }
+          console.log(`Activated service data for ${tenantUsers.length} users in tenant ${purchase.tenant_id}`);
+        }
+      } catch (serviceDataError) {
+        console.error('Error creating/activating service data:', serviceDataError);
+      }
+
     } catch (tenantPackageError) {
       console.error('Error saving to tenant_offered_packages:', tenantPackageError);
     }
@@ -345,6 +448,172 @@ exports.paypalCancel = async (req, res) => {
   } catch (error) {
     console.error('Error canceling payment:', error);
     return res.status(500).json({ message: 'Error canceling payment', error: error.message });
+  }
+};
+
+// Kích hoạt gói data cho tenant
+exports.activatePackageForTenant = async (req, res) => {
+  try {
+    const { purchase_id } = req.params;
+    
+    // Kiểm tra quyền truy cập
+    if (req.user.role !== 'global_admin' && req.user.role !== 'tenant_admin') {
+      return res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
+    }
+
+    // Tìm purchase
+    const purchase = await UserPurchase.findByPk(purchase_id, {
+      include: ['user', 'package']
+    });
+
+    if (!purchase) {
+      return res.status(404).json({ error: 'Purchase not found' });
+    }
+
+    // Kiểm tra quyền truy cập theo tenant
+    if (req.user.role === 'tenant_admin' && purchase.tenant_id !== req.user.tenant_id) {
+      return res.status(403).json({ error: 'Forbidden - Cannot access data from other tenants' });
+    }
+
+    if (purchase.status !== 'completed') {
+      return res.status(400).json({ error: 'Purchase is not completed' });
+    }
+
+    // Cập nhật hoặc tạo TenantOfferedPackage
+    const [tenantOfferedPackage, created] = await TenantOfferedPackage.findOrCreate({
+      where: { 
+        tenant_id: purchase.tenant_id, 
+        package_id: purchase.package_id 
+      },
+      defaults: {
+        status: 'active'
+      }
+    });
+
+    if (!created) {
+      await tenantOfferedPackage.update({ status: 'active' });
+    }
+
+    // Lấy tất cả users trong tenant
+    const tenantUsers = await User.findAll({
+      where: { tenant_id: purchase.tenant_id }
+    });
+
+    // Kích hoạt service data cho tất cả users
+    const activationResults = [];
+    for (const user of tenantUsers) {
+      const [serviceData, serviceCreated] = await ServiceData.findOrCreate({
+        where: {
+          tenant_id: purchase.tenant_id,
+          user_id: user.user_id,
+          package_id: purchase.package_id
+        },
+        defaults: {
+          object_key: `tenant_${purchase.tenant_id}_user_${user.user_id}`,
+          file_size: 0,
+          bandwidth_used: 0,
+          database_used: 0,
+          api_calls_used: 0,
+          status: 'active'
+        }
+      });
+
+      if (!serviceCreated) {
+        await serviceData.update({ status: 'active' });
+      }
+
+      activationResults.push({
+        user_id: user.user_id,
+        email: user.email,
+        activated: true,
+        created: serviceCreated
+      });
+    }
+
+    res.status(200).json({
+      message: 'Package activated successfully for tenant',
+      purchase: {
+        purchase_id: purchase.purchase_id,
+        package_name: purchase.package.name,
+        tenant_id: purchase.tenant_id
+      },
+      tenantOfferedPackage: {
+        tenant_id: tenantOfferedPackage.tenant_id,
+        package_id: tenantOfferedPackage.package_id,
+        status: tenantOfferedPackage.status
+      },
+      activatedUsers: activationResults,
+      totalUsers: tenantUsers.length
+    });
+
+  } catch (error) {
+    console.error('Error activating package for tenant:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Lấy thống kê đơn hàng theo role
+exports.getPurchaseStats = async (req, res) => {
+  try {
+    const whereClause = {};
+    
+    // Filter theo role
+    if (req.user.role === 'tenant_admin') {
+      whereClause.tenant_id = req.user.tenant_id;
+    } else if (req.user.role === 'tenant_user') {
+      whereClause.user_id = req.user.user_id;
+    }
+
+    // Thống kê theo status
+    const statusStats = await UserPurchase.findAll({
+      where: whereClause,
+      attributes: [
+        'status',
+        [Sequelize.fn('COUNT', Sequelize.col('purchase_id')), 'count'],
+        [Sequelize.fn('SUM', Sequelize.col('package.price')), 'total_amount']
+      ],
+      include: [
+        {
+          model: ServicePackage,
+          as: 'package',
+          attributes: []
+        }
+      ],
+      group: ['status'],
+      raw: true
+    });
+
+    // Tổng số đơn hàng
+    const totalPurchases = await UserPurchase.count({ where: whereClause });
+
+    // Đơn hàng gần đây
+    const recentPurchases = await UserPurchase.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['user_id', 'email', 'role']
+        },
+        {
+          model: ServicePackage,
+          as: 'package',
+          attributes: ['package_id', 'name', 'price']
+        }
+      ],
+      order: [['purchase_date', 'DESC']],
+      limit: 5
+    });
+
+    res.status(200).json({
+      statusStats,
+      totalPurchases,
+      recentPurchases
+    });
+
+  } catch (error) {
+    console.error('Error getting purchase stats:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 

@@ -39,6 +39,11 @@
         Khách hàng
       </RouterLink>
 
+      <RouterLink to="/purchases" :class="navClass('/purchases')">
+        <Receipt class="tw-w-4 tw-h-4 tw-text-green-500" />
+        {{ isGlobalAdmin ? 'Quản lý đơn hàng' : 'Dịch vụ đã mua' }}
+      </RouterLink>
+
       <RouterLink to="/service-data" :class="navClass('/service-data')">
         <Database class="tw-w-4 tw-h-4 tw-text-cyan-500" />
         Dữ liệu dịch vụ

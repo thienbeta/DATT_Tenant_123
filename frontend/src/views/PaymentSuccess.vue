@@ -36,14 +36,27 @@
         
         <div class="flex items-center justify-center mb-3">
           <span class="text-sm text-gray-500 mr-2">Tổng tiền:</span>
-          <span class="text-2xl font-bold text-green-600">{{ formatPrice(price) }}đ</span>
+          <span class="text-2xl font-bold text-green-600">{{ formatPrice(price) }}</span>
         </div>
         
-        <div class="flex items-center justify-center text-sm text-gray-500">
+        <div class="flex items-center justify-center text-sm text-gray-500 mb-4">
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
           Mã đơn hàng: {{ purchaseId }}
+        </div>
+
+        <!-- Service Data Activation Status -->
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+          <div class="flex items-center mb-2">
+            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-sm font-semibold text-green-700">Dịch vụ đã được kích hoạt!</span>
+          </div>
+          <p class="text-xs text-green-600">
+            Gói data đã được kích hoạt cho tất cả người dùng trong tenant. Bạn có thể bắt đầu upload file, ảnh và sử dụng các tính năng khác.
+          </p>
         </div>
       </div>
 
@@ -62,6 +75,23 @@
         </button>
         
         <button
+          @click="checkActivationStatus"
+          :disabled="checkingStatus"
+          class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-2xl font-medium transition-all duration-200 hover:from-green-700 hover:to-emerald-700 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span class="flex items-center justify-center">
+            <svg v-if="checkingStatus" class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            {{ checkingStatus ? 'Đang kiểm tra...' : 'Kiểm tra trạng thái dịch vụ' }}
+          </span>
+        </button>
+        
+        <button
           @click="downloadReceipt"
           class="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-2xl font-medium transition-all duration-200 hover:bg-gray-200 hover:shadow-md"
         >
@@ -72,6 +102,18 @@
             Tải hóa đơn
           </span>
         </button>
+      </div>
+
+      <!-- Service Status Details -->
+      <div v-if="activationStatus" class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <h3 class="text-sm font-semibold text-blue-800 mb-2">Chi tiết dịch vụ:</h3>
+        <div class="text-xs text-blue-700 space-y-1">
+          <p><strong>Gói:</strong> {{ activationStatus.package?.name }}</p>
+          <p><strong>Giới hạn lưu trữ:</strong> {{ formatStorage(activationStatus.limits?.file_storage_limit) }}</p>
+          <p><strong>Giới hạn băng thông:</strong> {{ formatStorage(activationStatus.limits?.bandwidth_limit) }}</p>
+          <p v-if="activationStatus.limits?.database_limit"><strong>Giới hạn database:</strong> {{ activationStatus.limits.database_limit }}</p>
+          <p v-if="activationStatus.limits?.api_call_limit"><strong>Giới hạn API calls:</strong> {{ activationStatus.limits.api_call_limit }}</p>
+        </div>
       </div>
 
       <!-- Thank you message -->
@@ -85,18 +127,65 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useServiceData } from '../composables/useServiceData';
+import { toast } from 'vue3-toastify';
 
 const router = useRouter();
+const { checkTenantActivation, formatFileSize } = useServiceData();
+
 const purchaseId = ref('');
 const packageName = ref('');
 const price = ref(0);
+const activationStatus = ref(null);
+const checkingStatus = ref(false);
 
 const formatPrice = (price) => {
-  return price ? price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '0';
+  if (!price) return '$0.00';
+  
+  // Chuyển đổi từ VND sang USD (giả sử tỷ giá 1 USD = 24,000 VND)
+  const exchangeRate = 24000;
+  const usdPrice = price / exchangeRate;
+  
+  // Format theo USD
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(usdPrice);
+};
+
+const formatStorage = (bytes) => {
+  if (!bytes || bytes === 0) return 'Không giới hạn';
+  return formatFileSize(bytes);
 };
 
 const goHome = () => {
   router.push('/');
+};
+
+const checkActivationStatus = async () => {
+  checkingStatus.value = true;
+  try {
+    const data = await checkTenantActivation();
+    activationStatus.value = data;
+    if (data.isActivated) {
+      toast.success('Dịch vụ đã được kích hoạt thành công!', {
+        timeout: 3000,
+      });
+    } else {
+      toast.warning('Dịch vụ chưa được kích hoạt. Vui lòng thử lại sau.', {
+        timeout: 3000,
+      });
+    }
+  } catch (error) {
+    console.error('Error checking activation status:', error);
+    toast.error('Có lỗi khi kiểm tra trạng thái dịch vụ.', {
+      timeout: 3000,
+    });
+  } finally {
+    checkingStatus.value = false;
+  }
 };
 
 const downloadReceipt = () => {
@@ -109,6 +198,11 @@ onMounted(() => {
   purchaseId.value = urlParams.get('purchase_id') || 'PH' + Date.now();
   packageName.value = decodeURIComponent(urlParams.get('package_name') || 'Gói Premium');
   price.value = parseFloat(urlParams.get('price') || 299000);
+  
+  // Tự động kiểm tra trạng thái kích hoạt sau 2 giây
+  setTimeout(() => {
+    checkActivationStatus();
+  }, 2000);
 });
 </script>
 

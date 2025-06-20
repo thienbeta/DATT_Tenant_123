@@ -40,7 +40,7 @@ db.redisClient = redisClient;
 
 // Import các model
 db.Tenant = require('./models/tenant.model')(sequelize, Sequelize);
-db.User = require('./models/user.model')(sequelize, Sequelize);
+db.User = require('./models/user.model.js')(sequelize, Sequelize);
 db.CategoryPackage = require('./models/category_package.model')(sequelize, Sequelize);
 db.ServicePackage = require('./models/service_package.model')(sequelize, Sequelize);
 db.TenantOfferedPackage = require('./models/tenant_offered_package.model')(sequelize, Sequelize);
@@ -62,6 +62,7 @@ app.use('/api/tenant-offered-packages', require('./routes/tenant_offered_package
 app.use('/api/user-purchases', require('./routes/user_purchase.routes'));
 app.use('/api/service-data', require('./routes/service_data.routes'));
 app.use('/api/categories', require('./routes/category_package.routes'));
+app.use('/api/file-upload', require('./routes/file_upload.routes'));
 
 // Đồng bộ cơ sở dữ liệu và khởi động server
 db.sequelize.sync({ force: false, alter: false }).then(() => {

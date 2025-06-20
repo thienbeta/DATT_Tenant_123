@@ -78,7 +78,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-vue-next'
-import axios from 'axios'
+import { apiClient } from '../composables/useApiClient'
 
 const router = useRouter()
 const showPassword = ref(false)
@@ -100,7 +100,7 @@ const handleLogin = async () => {
     loading.value = true
     error.value = ''
 
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/users/login`, {
+    const response = await apiClient.post(`/api/users/login`, {
       email: form.email,
       password: form.password
     })

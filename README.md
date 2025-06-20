@@ -21,6 +21,8 @@ npm i
 npm install bcrypt 
 npm install bcrypt cors
 npm install ioredis
+npm install cookie-parser
+npm install redis
 
 npm install pdfkit
 
@@ -34,5 +36,11 @@ npm i
 npm install axios
 npm install dotenv
 ```
-#086df9
-npm install redis
+
+### thêm vào sql 
+```bash
+ALTER TABLE service_packages
+  ADD COLUMN bandwidth_limit BIGINT DEFAULT 0,
+  ADD COLUMN database_limit BIGINT DEFAULT 0,
+  ADD COLUMN api_call_limit BIGINT DEFAULT 0;
+```
