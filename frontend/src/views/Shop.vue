@@ -114,7 +114,7 @@
           @click="openModal(pkg)"
         >
           <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ pkg.name }}</h3>
-          <p class="text-2xl font-bold text-red-600 mb-2">{{ formatPrice(pkg.price) }}đ</p>
+          <p class="text-2xl font-bold text-red-600 mb-2">{{ formatPrice(pkg.price) }}</p>
           <p class="text-xs text-gray-500 mb-3">{{ pkg.billing_cycle }}</p>
           <ul class="text-sm text-gray-700 space-y-2 mb-4">
             <li v-if="pkg.cpu" class="flex items-center">
@@ -183,7 +183,7 @@
             </button>
             <h2 class="text-2xl font-bold text-gray-900 mb-3 truncate">{{ selectedPackage.name }}</h2>
             <p class="text-sm text-gray-600 mb-2">Danh mục: {{ selectedPackage.category_name || 'Chưa xác định' }}</p>
-            <p class="text-xl font-bold text-red-600 mb-2">{{ formatPrice(selectedPackage.price) }}đ</p>
+            <p class="text-xl font-bold text-red-600 mb-2">{{ formatPrice(selectedPackage.price) }}</p>
             <p class="text-xs text-gray-500 mb-3">{{ selectedPackage.billing_cycle }}</p>
             <ul class="text-sm text-gray-700 space-y-2 mb-4">
               <li v-if="selectedPackage.cpu" class="flex items-center">
@@ -235,13 +235,13 @@
               <p class="text-xs text-gray-600"><strong>Loại gói:</strong> {{ selectedPackage.package_type || 'Chưa xác định' }}</p>
               <p class="text-xs text-gray-600"><strong>Loại dịch vụ:</strong> {{ selectedPackage.service_type || 'Chưa xác định' }}</p>
               <p class="text-xs text-gray-600"><strong>Chu kỳ thanh toán:</strong> {{ selectedPackage.billing_cycle || 'Chưa xác định' }}</p>
-              <p class="text-xs text-gray-600"><strong>Phí cài đặt:</strong> 0đ</p>
-              <p class="text-xs text-gray-600"><strong>Giá:</strong> {{ formatPrice(selectedPackage.price) }}đ</p>
+              <p class="text-xs text-gray-600"><strong>Phí cài đặt:</strong> $0.00</p>
+              <p class="text-xs text-gray-600"><strong>Giá:</strong> {{ formatPrice(selectedPackage.price) }}</p>
               <p v-if="selectedPackage.file_storage_limit" class="text-xs text-gray-600"><strong>Giới hạn lưu trữ:</strong> {{ formatStorage(selectedPackage.file_storage_limit) }}</p>
               <p v-if="selectedPackage.bandwidth_limit" class="text-xs text-gray-600"><strong>Giới hạn băng thông:</strong> {{ formatStorage(selectedPackage.bandwidth_limit) }}</p>
               <p v-if="selectedPackage.database_limit" class="text-xs text-gray-600"><strong>Giới hạn cơ sở dữ liệu:</strong> {{ selectedPackage.database_limit }}</p>
               <p v-if="selectedPackage.api_call_limit" class="text-xs text-gray-600"><strong>Giới hạn API Call:</strong> {{ selectedPackage.api_call_limit }}</p>
-              <p class="text-sm font-bold text-gray-900 mt-2">Tổng tiền: {{ formatPrice(selectedPackage.price) }}đ</p>
+              <p class="text-sm font-bold text-gray-900 mt-2">Tổng tiền: {{ formatPrice(selectedPackage.price) }}</p>
             </div>
             <transition name="fade">
               <div v-if="showPaymentForm" class="mt-4">
@@ -348,7 +348,7 @@ const checkPaymentStatus = async () => {
       }
 
       const result = await response.json();
-      toast.success(`Thanh toán thành công cho gói ${result.package_name}! Tổng tiền: ${formatPrice(result.price)}đ`, {
+      toast.success(`Thanh toán thành công cho gói ${result.package_name}! Tổng tiền: ${formatPrice(result.price)}`, {
         timeout: 5000,
       });
 
@@ -456,7 +456,19 @@ const updateCategory = (categoryId) => {
 };
 
 const formatPrice = (price) => {
-  return price ? price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '0';
+  if (!price) return '$0.00';
+  
+  // Chuyển đổi từ VND sang USD (giả sử tỷ giá 1 USD = 24,000 VND)
+  const exchangeRate = 24000;
+  const usdPrice = price / exchangeRate;
+  
+  // Format theo USD
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(usdPrice);
 };
 
 const formatStorage = (bytes) => {
@@ -612,13 +624,6 @@ const closeModal = () => {
 };
 
 onMounted(() => {
-  // Kiểm tra quyền truy cập
-  const user = getStoredUser();
-  if (!user || (user.role !== 'tenant_admin' && user.role !== 'global_admin')) {
-    error.value = 'Bạn không có quyền truy cập trang này. Chỉ tenant_admin và global_admin mới có thể truy cập Shop.';
-    return;
-  }
-
   fetchPackages();
   fetchCategories();
   checkPaymentStatus();
