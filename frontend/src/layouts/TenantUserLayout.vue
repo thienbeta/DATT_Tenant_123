@@ -3,16 +3,16 @@
     <!-- Sidebar -->
     <aside class="tw-w-64 tw-bg-white tw-border-r tw-shadow-sm tw-h-screen tw-flex tw-flex-col">
       <div class="tw-p-4">
-        <RouterLink to="/tenant-user/dashboard" class="tw-flex tw-justify-center">
+        <RouterLink to="/tenant-user/files" class="tw-flex tw-justify-center">
           <img src="/logo.jpg" alt="Logo" class="tw-h-14 tw-w-full tw-object-contain" />
         </RouterLink>
       </div>
       <nav class="tw-flex-1 tw-flex tw-flex-col tw-gap-2 tw-px-4">
-        <RouterLink to="/tenant-user/dashboard" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-px-3 tw-rounded tw-border tw-border-[#086df9] tw-text-[#086df9]">
-          <svg class="tw-w-4 tw-h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 8h2v-2H7v2zm0-4h2v-2H7v2zm0-4h2V7H7v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z"/></svg>
-          Tổng quan
+        <RouterLink to="/tenant-user/files" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-px-3 tw-rounded tw-border tw-border-[#086df9] tw-text-[#086df9]">
+          <svg class="tw-w-4 tw-h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
+          Tải File
         </RouterLink>
-        <RouterLink to="/tenant-user/files" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-px-3 tw-rounded tw-border tw-border-transparent tw-text-gray-700 hover:tw-border-[#086df9] hover:tw-text-[#086df9]">
+        <!-- <RouterLink to="/tenant-user/files" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-px-3 tw-rounded tw-border tw-border-transparent tw-text-gray-700 hover:tw-border-[#086df9] hover:tw-text-[#086df9]">
           <svg class="tw-w-4 tw-h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
           Quản lý File
         </RouterLink>
@@ -23,7 +23,7 @@
         <RouterLink to="/tenant-user/domains" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-px-3 tw-rounded tw-border tw-border-transparent tw-text-gray-700 hover:tw-border-[#086df9] hover:tw-text-[#086df9]">
           <svg class="tw-w-4 tw-h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/></svg>
           Quản lý Domain
-        </RouterLink>
+        </RouterLink> -->
         <RouterLink to="/tenant-user/profile" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-px-3 tw-rounded tw-border tw-border-transparent tw-text-gray-700 hover:tw-border-[#086df9] hover:tw-text-[#086df9]">
           <svg class="tw-w-4 tw-h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
           Tài khoản

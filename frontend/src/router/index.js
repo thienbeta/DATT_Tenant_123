@@ -69,8 +69,7 @@ const routes = [
   {
     path: '/tenant-user',
     children: [
-      { path: 'dashboard', name: 'TenantUserDashboard', component: TenantUserDashboard },
-      { path: 'files', name: 'TenantUserFiles', component: HomePage },
+      { path: 'files', name: 'TenantUserDashboard', component: TenantUserDashboard },
       { path: 'databases', name: 'TenantUserDatabases', component: HomePage },
       { path: 'domains', name: 'TenantUserDomains', component: HomePage },
       { path: 'profile', name: 'TenantUserProfile', component: ProfilePage },
