@@ -239,8 +239,10 @@ const downloadFile = async (file) => {
 }
 
 const deleteFileHandler = async (objectName) => {
+  if (!confirm('Bạn có chắc chắn muốn xóa file này?')) return;
   try {
     await deleteFile(objectName, props.tenantId, props.userId, props.packageId)
+    await getFiles(props.tenantId, props.userId, props.packageId)
     toast.success('Xóa file thành công!')
   } catch (err) {
     console.error('Error deleting file:', err)

@@ -103,7 +103,7 @@ export function useFileUpload() {
   // Delete file
   const deleteFile = async (objectName, tenantId, userId, packageId) => {
     try {
-      await apiClient.delete(`/file-upload/files/${encodeURIComponent(objectName)}`, {
+      await apiClient.delete(`/api/file-upload/files/${encodeURIComponent(objectName)}`, {
         data: {
           tenant_id: tenantId,
           user_id: userId,
@@ -128,7 +128,7 @@ export function useFileUpload() {
   // Get file URL
   const getFileUrl = async (objectName, expiryHours = 24) => {
     try {
-      const response = await apiClient.get(`/file-upload/files/${encodeURIComponent(objectName)}/url`, {
+      const response = await apiClient.get(`/api/file-upload/files/${encodeURIComponent(objectName)}/url`, {
         params: { expiryHours }
       })
       return response.data.fileUrl
@@ -200,7 +200,7 @@ export function useFileUpload() {
   // Debug service data
   const debugServiceData = async (tenantId, userId) => {
     try {
-      const response = await apiClient.get('/file-upload/debug/service-data', {
+      const response = await apiClient.get('/api/file-upload/debug/service-data', {
         params: {
           tenant_id: tenantId,
           user_id: userId
