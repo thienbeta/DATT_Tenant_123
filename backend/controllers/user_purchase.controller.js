@@ -59,7 +59,19 @@ exports.getAll = async (req, res) => {
         {
           model: ServicePackage,
           as: 'package',
-          attributes: ['package_id', 'name', 'description', 'price', 'billing_cycle']
+          attributes: [
+            'package_id', 
+            'name', 
+            'description', 
+            'price', 
+            'billing_cycle',
+            'file_storage_limit',
+            'bandwidth_limit',
+            'database_limit', 
+            'api_call_limit',
+            'package_type',
+            'category_id'
+          ]
         }
       ],
       limit: parseInt(limit),
