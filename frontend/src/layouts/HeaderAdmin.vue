@@ -36,7 +36,7 @@
 
       <RouterLink to="/customers" :class="navClass('/customers')">
         <Users class="tw-w-4 tw-h-4 tw-text-purple-500" />
-        Khách hàng
+        Người dùng
       </RouterLink>
 
       <RouterLink to="/purchases" :class="navClass('/purchases')">

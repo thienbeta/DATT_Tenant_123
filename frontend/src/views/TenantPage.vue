@@ -56,294 +56,257 @@
     </div>
 
     <!-- Danh sách Tenant và Thống kê -->
-    <div v-for="tenant in paginatedTenants" :key="tenant.tenant_id" class="tw-mb-6">
-      <!-- Thống kê người dùng -->
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-4 tw-gap-4 tw-mb-4">
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Tổng số người dùng</p>
-              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
-                {{ tenantStats[tenant.tenant_id]?.totalUsers || 0 }}
-              </h3>
-            </div>
-            <div class="tw-p-3 tw-bg-blue-100 dark:tw-bg-blue-900 tw-rounded-full">
-              <Users class="tw-w-6 tw-h-6 tw-text-blue-600 dark:tw-text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Người dùng mới (7 ngày)</p>
-              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
-                {{ tenantStats[tenant.tenant_id]?.recentUsers || 0 }}
-              </h3>
-            </div>
-            <div class="tw-p-3 tw-bg-green-100 dark:tw-bg-green-900 tw-rounded-full">
-              <UserPlus class="tw-w-6 tw-h-6 tw-text-green-600 dark:tw-text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Người dùng theo vai trò</p>
-              <div class="tw-mt-2">
-                <div v-for="(count, role) in tenantStats[tenant.tenant_id]?.usersByRole || {}" :key="role" class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-                  <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">{{ formatRole(role) }}</span>
-                  <span class="tw-font-semibold tw-text-gray-800 dark:tw-text-white">{{ count }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="tw-p-3 tw-bg-purple-100 dark:tw-bg-purple-900 tw-rounded-full">
-              <UserCog class="tw-w-6 tw-h-6 tw-text-purple-600 dark:tw-text-purple-400" />
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Trạng thái người dùng</p>
-              <div class="tw-mt-2">
-                <div v-for="(count, status) in tenantStats[tenant.tenant_id]?.usersByStatus || {}" :key="status" class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-                  <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">{{ formatStatus(status) }}</span>
-                  <span class="tw-font-semibold tw-text-gray-800 dark:tw-text-white">{{ count }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="tw-p-3 tw-bg-yellow-100 dark:tw-bg-yellow-900 tw-rounded-full">
-              <Activity class="tw-w-6 tw-h-6 tw-text-yellow-600 dark:tw-text-yellow-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Thống kê dung lượng sử dụng -->
-      <div v-if="tenantStats[tenant.tenant_id]?.totalUsage" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-4 tw-gap-4 tw-mb-4">
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Tổng dung lượng</p>
-              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
-                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.file_size || 0) }}
-              </h3>
-            </div>
-            <div class="tw-p-3 tw-bg-blue-100 dark:tw-bg-blue-900 tw-rounded-full">
-              <HardDrive class="tw-w-6 tw-h-6 tw-text-blue-600 dark:tw-text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Băng thông sử dụng</p>
-              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
-                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.bandwidth_used || 0) }}
-              </h3>
-            </div>
-            <div class="tw-p-3 tw-bg-purple-100 dark:tw-bg-purple-900 tw-rounded-full">
-              <Wifi class="tw-w-6 tw-h-6 tw-text-purple-600 dark:tw-text-purple-400" />
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Database sử dụng</p>
-              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
-                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.database_used || 0) }}
-              </h3>
-            </div>
-            <div class="tw-p-3 tw-bg-orange-100 dark:tw-bg-orange-900 tw-rounded-full">
-              <Database class="tw-w-6 tw-h-6 tw-text-orange-600 dark:tw-text-orange-400" />
-            </div>
-          </div>
-        </div>
-
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
-          <div class="tw-flex tw-items-center tw-justify-between">
-            <div>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">API Calls</p>
-              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
-                {{ (tenantStats[tenant.tenant_id]?.totalUsage?.api_calls_used || 0).toLocaleString() }}
-              </h3>
-            </div>
-            <div class="tw-p-3 tw-bg-indigo-100 dark:tw-bg-indigo-900 tw-rounded-full">
-              <Zap class="tw-w-6 tw-h-6 tw-text-indigo-600 dark:tw-text-indigo-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Thống kê theo gói dịch vụ -->
-      <div v-if="tenantStats[tenant.tenant_id]?.storageStatsByPackage?.length > 0" class="tw-mb-4">
-        <h4 class="tw-text-lg tw-font-semibold tw-mb-3 tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
-          <BarChart3 class="tw-w-5 tw-h-5 tw-mr-2" />
-          Thống kê theo gói dịch vụ
-        </h4>
-        <div v-for="packageStat in tenantStats[tenant.tenant_id]?.storageStatsByPackage" :key="packageStat.package_id" 
-             class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4 tw-border tw-border-gray-200 dark:tw-border-gray-700">
-          <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
-            <h5 class="tw-font-semibold tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
-              <Package class="tw-w-4 tw-h-4 tw-mr-2 tw-text-blue-600" />
-              {{ packageStat.package_name }}
-            </h5>
-            <span class="tw-text-sm tw-text-green-600 tw-font-medium tw-flex tw-items-center">
-              <DollarSign class="tw-w-4 tw-h-4 tw-mr-1" />
-              {{ formatCurrency(packageStat.price) }}
-            </span>
-          </div>
-          
-          <!-- Storage Usage -->
-          <div class="tw-mb-3">
-            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">Dung lượng</span>
-              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
-                {{ formatFileSize(packageStat.usage.file_size) }} / {{ formatFileSize(packageStat.limits.file_storage_limit) }}
-              </span>
-            </div>
-            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
-              <div class="tw-bg-blue-600 tw-h-2 tw-rounded-full" 
-                   :style="{ width: formatPercentage(packageStat.usage.file_size, packageStat.limits.file_storage_limit) + '%' }"></div>
-            </div>
-          </div>
-
-          <!-- Bandwidth Usage -->
-          <div class="tw-mb-3">
-            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">Băng thông</span>
-              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
-                {{ formatFileSize(packageStat.usage.bandwidth_used) }} / {{ formatFileSize(packageStat.limits.bandwidth_limit) }}
-              </span>
-            </div>
-            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
-              <div class="tw-bg-purple-600 tw-h-2 tw-rounded-full" 
-                   :style="{ width: formatPercentage(packageStat.usage.bandwidth_used, packageStat.limits.bandwidth_limit) + '%' }"></div>
-            </div>
-          </div>
-
-          <!-- Database Usage -->
-          <div class="tw-mb-3">
-            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">Database</span>
-              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
-                {{ formatFileSize(packageStat.usage.database_used) }} / {{ formatFileSize(packageStat.limits.database_limit) }}
-              </span>
-            </div>
-            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
-              <div class="tw-bg-orange-600 tw-h-2 tw-rounded-full" 
-                   :style="{ width: formatPercentage(packageStat.usage.database_used, packageStat.limits.database_limit) + '%' }"></div>
-            </div>
-          </div>
-
-          <!-- API Calls -->
-          <div class="tw-mb-3">
-            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">API Calls</span>
-              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
-                {{ packageStat.usage.api_calls_used.toLocaleString() }} / {{ packageStat.limits.api_call_limit.toLocaleString() }}
-              </span>
-            </div>
-            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
-              <div class="tw-bg-indigo-600 tw-h-2 tw-rounded-full" 
-                   :style="{ width: formatPercentage(packageStat.usage.api_calls_used, packageStat.limits.api_call_limit) + '%' }"></div>
-            </div>
-          </div>
-
-          <div class="tw-text-xs tw-text-gray-500 dark:tw-text-gray-400">
-            {{ packageStat.usage.total_records }} bản ghi
-          </div>
-        </div>
-      </div>
-      <!-- Gói dịch vụ đang hoạt động -->
-      <div v-if="tenantStats[tenant.tenant_id]?.activePackages?.length > 0" class="tw-mb-4">
-        <h4 class="tw-text-lg tw-font-semibold tw-mb-3 tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
-          <PieChart class="tw-w-5 tw-h-5 tw-mr-2" />
-          Gói dịch vụ đang hoạt động
-        </h4>
-        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-overflow-hidden">
-          <div class="tw-overflow-x-auto">
-            <table class="tw-min-w-full tw-divide-y tw-divide-gray-200 dark:tw-divide-gray-700">
-              <thead class="tw-bg-gray-50 dark:tw-bg-gray-700">
-                <tr>
-                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Gói dịch vụ</th>
-                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Người dùng</th>
-                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Vai trò</th>
-                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Thời gian</th>
-                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Giá</th>
-                </tr>
-              </thead>
-              <tbody class="tw-bg-white dark:tw-bg-gray-800 tw-divide-y tw-divide-gray-200 dark:tw-divide-gray-700">
-                <tr v-for="pkg in tenantStats[tenant.tenant_id]?.activePackages" :key="pkg.purchase_id" class="hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700">
-                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
-                    <div class="tw-text-sm tw-font-medium tw-text-gray-900 dark:tw-text-white">{{ pkg.package_name }}</div>
-                  </td>
-                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
-                    <div class="tw-text-sm tw-text-gray-900 dark:tw-text-white">{{ pkg.user_email }}</div>
-                  </td>
-                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
-                    <span class="tw-inline-flex tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-rounded-full tw-bg-green-100 tw-text-green-800">
-                      {{ formatRole(pkg.user_role) }}
-                    </span>
-                  </td>
-                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500 dark:tw-text-gray-300">
-                    <div>{{ new Date(pkg.start_date).toLocaleDateString('vi-VN') }}</div>
-                    <div v-if="pkg.end_date">đến {{ new Date(pkg.end_date).toLocaleDateString('vi-VN') }}</div>
-                    <div v-else class="tw-text-green-600">Không giới hạn</div>
-                  </td>
-                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium tw-text-green-600">
-                    {{ formatCurrency(pkg.price) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Thông tin Tenant -->
-      <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+    <div v-for="tenant in paginatedTenants" :key="tenant.tenant_id" class="tw-mb-8">
+      <!-- Header Tenant với thông tin cơ bản -->
+      <div class="tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-700 tw-rounded-t-xl tw-p-6 tw-text-white">
         <div class="tw-flex tw-justify-between tw-items-center">
           <div class="tw-flex tw-items-center tw-gap-4">
-            <div>
-              <h3 class="tw-text-lg tw-font-semibold tw-text-gray-800 dark:tw-text-white">{{ tenant.name }}</h3>
-              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">{{ tenant.adminUser?.email || '—' }}</p>
+            <div class="tw-w-12 tw-h-12 tw-bg-white tw-bg-opacity-20 tw-rounded-full tw-flex tw-items-center tw-justify-center">
+              <Building class="tw-w-6 tw-h-6 tw-text-white" />
             </div>
+            <div>
+              <h3 class="tw-text-xl tw-font-bold">{{ tenant.name }}</h3>
+              <p class="tw-text-blue-100 tw-text-sm">{{ tenant.adminUser?.email || '—' }}</p>
+              <p class="tw-text-blue-100 tw-text-xs">ID: {{ tenant.tenant_id }} • Tạo: {{ new Date(tenant.created_at || '').toLocaleDateString('vi-VN') }}</p>
+            </div>
+          </div>
+          <div class="tw-flex tw-items-center tw-gap-4">
             <span
               :class="[
                 'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
-                tenant.status === 'active' ? 'tw-bg-green-100 tw-text-green-700' :
-                tenant.status === 'inactive' ? 'tw-bg-yellow-100 tw-text-yellow-700' :
-                'tw-bg-red-100 tw-text-red-700'
+                tenant.status === 'active' ? 'tw-bg-green-500 tw-text-white' :
+                tenant.status === 'inactive' ? 'tw-bg-yellow-500 tw-text-white' :
+                'tw-bg-red-500 tw-text-white'
               ]"
             >
               {{ tenant.status === 'active' ? 'Hoạt động' : tenant.status === 'inactive' ? 'Tạm dừng' : 'Đã xóa' }}
             </span>
-          </div>
-          <div class="tw-flex tw-gap-2">
-            <button @click="openModal('view', tenant)" class="tw-text-green-600 hover:tw-text-green-800 tw-transition">
-              <Eye class="tw-w-5 tw-h-5" />
-            </button>
-            <button v-if="currentTab === 'list'" @click="openModal('edit', tenant)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
-              <Edit class="tw-w-5 tw-h-5" />
-            </button>
-            <button v-if="currentTab === 'list'" @click="moveToTrash(tenant)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
-              <Trash2 class="tw-w-5 tw-h-5" />
-            </button>
-            <button v-if="currentTab === 'restore'" @click="restoreTenant(tenant)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
-              <RefreshCcw class="tw-w-5 tw-h-5" />
-            </button>
-            <button v-if="currentTab === 'restore'" @click="permanentlyDelete(tenant)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
-              <Trash2 class="tw-w-5 tw-h-5" />
-            </button>
+            <div class="tw-flex tw-gap-2">
+              <button @click="openModal('view', tenant)" class="tw-text-white hover:tw-bg-white hover:tw-bg-opacity-20 tw-p-2 tw-rounded-lg tw-transition">
+                <Eye class="tw-w-5 tw-h-5" />
+              </button>
+              <button v-if="currentTab === 'list'" @click="openModal('edit', tenant)" class="tw-text-white hover:tw-bg-white hover:tw-bg-opacity-20 tw-p-2 tw-rounded-lg tw-transition">
+                <Edit class="tw-w-5 tw-h-5" />
+              </button>
+              <button v-if="currentTab === 'list'" @click="moveToTrash(tenant)" class="tw-text-white hover:tw-bg-red-500 tw-p-2 tw-rounded-lg tw-transition">
+                <Trash2 class="tw-w-5 tw-h-5" />
+              </button>
+              <button v-if="currentTab === 'restore'" @click="restoreTenant(tenant)" class="tw-text-white hover:tw-bg-white hover:tw-bg-opacity-20 tw-p-2 tw-rounded-lg tw-transition">
+                <RefreshCcw class="tw-w-5 tw-h-5" />
+              </button>
+              <button v-if="currentTab === 'restore'" @click="permanentlyDelete(tenant)" class="tw-text-white hover:tw-bg-red-500 tw-p-2 tw-rounded-lg tw-transition">
+                <Trash2 class="tw-w-5 tw-h-5" />
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- Container cho tất cả thống kê -->
+      <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-b-xl tw-shadow-lg tw-overflow-hidden">
+        
+        <!-- Thống kê người dùng cơ bản -->
+        <div class="tw-p-6 tw-border-b tw-border-gray-200 dark:tw-border-gray-700">
+          <h4 class="tw-text-lg tw-font-semibold tw-mb-4 tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+            <Users class="tw-w-5 tw-h-5 tw-mr-2 tw-text-blue-600" />
+            Thống kê Người dùng
+          </h4>
+          <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-4">
+            <div class="tw-bg-blue-50 dark:tw-bg-blue-900 tw-rounded-lg tw-p-4 tw-text-center">
+              <div class="tw-text-2xl tw-font-bold tw-text-blue-600 dark:tw-text-blue-400">
+                {{ tenantStats[tenant.tenant_id]?.totalUsers || 0 }}
+              </div>
+              <div class="tw-text-sm tw-text-blue-600 dark:tw-text-blue-400 tw-mt-1">Tổng người dùng</div>
+            </div>
+            <div class="tw-bg-green-50 dark:tw-bg-green-900 tw-rounded-lg tw-p-4 tw-text-center">
+              <div class="tw-text-2xl tw-font-bold tw-text-green-600 dark:tw-text-green-400">
+                {{ tenantStats[tenant.tenant_id]?.recentUsers || 0 }}
+              </div>
+              <div class="tw-text-sm tw-text-green-600 dark:tw-text-green-400 tw-mt-1">Mới (7 ngày)</div>
+            </div>
+            <div class="tw-bg-purple-50 dark:tw-bg-purple-900 tw-rounded-lg tw-p-4 tw-text-center">
+              <div class="tw-text-sm tw-text-purple-600 dark:tw-text-purple-400 tw-font-medium">Vai trò</div>
+              <div class="tw-mt-1 tw-space-y-1">
+                <div v-for="(count, role) in tenantStats[tenant.tenant_id]?.usersByRole || {}" :key="role" class="tw-flex tw-justify-between tw-text-xs">
+                  <span class="tw-text-purple-600 dark:tw-text-purple-400">{{ formatRole(role) }}</span>
+                  <span class="tw-font-bold tw-text-purple-700 dark:tw-text-purple-300">{{ count }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="tw-bg-yellow-50 dark:tw-bg-yellow-900 tw-rounded-lg tw-p-4 tw-text-center">
+              <div class="tw-text-sm tw-text-yellow-600 dark:tw-text-yellow-400 tw-font-medium">Trạng thái</div>
+              <div class="tw-mt-1 tw-space-y-1">
+                <div v-for="(count, status) in tenantStats[tenant.tenant_id]?.usersByStatus || {}" :key="status" class="tw-flex tw-justify-between tw-text-xs">
+                  <span class="tw-text-yellow-600 dark:tw-text-yellow-400">{{ formatStatus(status) }}</span>
+                  <span class="tw-font-bold tw-text-yellow-700 dark:tw-text-yellow-300">{{ count }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thống kê dung lượng -->
+        <div v-if="tenantStats[tenant.tenant_id]?.totalUsage" class="tw-p-6 tw-border-b tw-border-gray-200 dark:tw-border-gray-700">
+          <h4 class="tw-text-lg tw-font-semibold tw-mb-4 tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+            <HardDrive class="tw-w-5 tw-h-5 tw-mr-2 tw-text-green-600" />
+            Thống kê Tài nguyên
+          </h4>
+          <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-4">
+            <div class="tw-bg-gradient-to-br tw-from-blue-500 tw-to-blue-600 tw-rounded-lg tw-p-4 tw-text-white tw-text-center">
+              <HardDrive class="tw-w-8 tw-h-8 tw-mx-auto tw-mb-2 tw-opacity-80" />
+              <div class="tw-text-lg tw-font-bold">
+                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.file_size || 0) }}
+              </div>
+              <div class="tw-text-sm tw-opacity-90">Dung lượng</div>
+            </div>
+            <div class="tw-bg-gradient-to-br tw-from-purple-500 tw-to-purple-600 tw-rounded-lg tw-p-4 tw-text-white tw-text-center">
+              <Wifi class="tw-w-8 tw-h-8 tw-mx-auto tw-mb-2 tw-opacity-80" />
+              <div class="tw-text-lg tw-font-bold">
+                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.bandwidth_used || 0) }}
+              </div>
+              <div class="tw-text-sm tw-opacity-90">Băng thông</div>
+            </div>
+            <div class="tw-bg-gradient-to-br tw-from-orange-500 tw-to-orange-600 tw-rounded-lg tw-p-4 tw-text-white tw-text-center">
+              <Database class="tw-w-8 tw-h-8 tw-mx-auto tw-mb-2 tw-opacity-80" />
+              <div class="tw-text-lg tw-font-bold">
+                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.database_used || 0) }}
+              </div>
+              <div class="tw-text-sm tw-opacity-90">Database</div>
+            </div>
+            <div class="tw-bg-gradient-to-br tw-from-indigo-500 tw-to-indigo-600 tw-rounded-lg tw-p-4 tw-text-white tw-text-center">
+              <Zap class="tw-w-8 tw-h-8 tw-mx-auto tw-mb-2 tw-opacity-80" />
+              <div class="tw-text-lg tw-font-bold">
+                {{ (tenantStats[tenant.tenant_id]?.totalUsage?.api_calls_used || 0).toLocaleString() }}
+              </div>
+              <div class="tw-text-sm tw-opacity-90">API Calls</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thống kê theo gói dịch vụ - Collapsible -->
+        <div v-if="tenantStats[tenant.tenant_id]?.storageStatsByPackage?.length > 0" class="tw-border-b tw-border-gray-200 dark:tw-border-gray-700">
+          <button 
+            @click="togglePackageStats(tenant.tenant_id)"
+            class="tw-w-full tw-p-6 tw-text-left hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700 tw-transition-colors"
+          >
+            <div class="tw-flex tw-items-center tw-justify-between">
+              <h4 class="tw-text-lg tw-font-semibold tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+                <BarChart3 class="tw-w-5 tw-h-5 tw-mr-2 tw-text-purple-600" />
+                Chi tiết Gói dịch vụ ({{ tenantStats[tenant.tenant_id]?.storageStatsByPackage?.length }})
+              </h4>
+              <div class="tw-transform tw-transition-transform" :class="{ 'tw-rotate-180': expandedPackages[tenant.tenant_id] }">
+                <ArrowRight class="tw-w-5 tw-h-5 tw-text-gray-400" />
+              </div>
+            </div>
+          </button>
+          
+          <div v-if="expandedPackages[tenant.tenant_id]" class="tw-px-6 tw-pb-6">
+            <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-4">
+              <div v-for="packageStat in tenantStats[tenant.tenant_id]?.storageStatsByPackage" :key="packageStat.package_id" 
+                   class="tw-border tw-border-gray-200 dark:tw-border-gray-600 tw-rounded-lg tw-p-4 tw-bg-gray-50 dark:tw-bg-gray-700">
+                
+                <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+                  <h5 class="tw-font-semibold tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+                    <Package class="tw-w-4 tw-h-4 tw-mr-2 tw-text-blue-600" />
+                    {{ packageStat.package_name }}
+                  </h5>
+                  <span class="tw-text-sm tw-text-green-600 tw-font-medium">
+                    {{ formatCurrency(packageStat.price) }}
+                  </span>
+                </div>
+                
+                <!-- Compact metrics grid -->
+                <div class="tw-grid tw-grid-cols-2 tw-gap-3 tw-text-sm">
+                  <div>
+                    <div class="tw-text-gray-600 dark:tw-text-gray-400">Dung lượng</div>
+                    <div class="tw-font-semibold tw-text-blue-600">{{ formatFileSize(packageStat.usage.file_size) }}</div>
+                    <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-1 tw-mt-1">
+                      <div class="tw-bg-blue-500 tw-h-1 tw-rounded-full" 
+                           :style="{ width: formatPercentage(packageStat.usage.file_size, packageStat.limits.file_storage_limit) + '%' }"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="tw-text-gray-600 dark:tw-text-gray-400">Băng thông</div>
+                    <div class="tw-font-semibold tw-text-purple-600">{{ formatFileSize(packageStat.usage.bandwidth_used) }}</div>
+                    <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-1 tw-mt-1">
+                      <div class="tw-bg-purple-500 tw-h-1 tw-rounded-full" 
+                           :style="{ width: formatPercentage(packageStat.usage.bandwidth_used, packageStat.limits.bandwidth_limit) + '%' }"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="tw-text-gray-600 dark:tw-text-gray-400">Database</div>
+                    <div class="tw-font-semibold tw-text-orange-600">{{ formatFileSize(packageStat.usage.database_used) }}</div>
+                    <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-1 tw-mt-1">
+                      <div class="tw-bg-orange-500 tw-h-1 tw-rounded-full" 
+                           :style="{ width: formatPercentage(packageStat.usage.database_used, packageStat.limits.database_limit) + '%' }"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="tw-text-gray-600 dark:tw-text-gray-400">API Calls</div>
+                    <div class="tw-font-semibold tw-text-indigo-600">{{ packageStat.usage.api_calls_used.toLocaleString() }}</div>
+                    <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-1 tw-mt-1">
+                      <div class="tw-bg-indigo-500 tw-h-1 tw-rounded-full" 
+                           :style="{ width: formatPercentage(packageStat.usage.api_calls_used, packageStat.limits.api_call_limit) + '%' }"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="tw-text-xs tw-text-gray-500 dark:tw-text-gray-400 tw-mt-3 tw-text-center">
+                  {{ packageStat.usage.total_records }} bản ghi
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gói dịch vụ đang hoạt động - Collapsible -->
+        <div v-if="tenantStats[tenant.tenant_id]?.activePackages?.length > 0">
+          <button 
+            @click="toggleActivePackages(tenant.tenant_id)"
+            class="tw-w-full tw-p-6 tw-text-left hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700 tw-transition-colors"
+          >
+            <div class="tw-flex tw-items-center tw-justify-between">
+              <h4 class="tw-text-lg tw-font-semibold tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+                <PieChart class="tw-w-5 tw-h-5 tw-mr-2 tw-text-green-600" />
+                Gói đang hoạt động ({{ tenantStats[tenant.tenant_id]?.activePackages?.length }})
+              </h4>
+              <div class="tw-transform tw-transition-transform" :class="{ 'tw-rotate-180': expandedActivePackages[tenant.tenant_id] }">
+                <ArrowRight class="tw-w-5 tw-h-5 tw-text-gray-400" />
+              </div>
+            </div>
+          </button>
+          
+          <div v-if="expandedActivePackages[tenant.tenant_id]" class="tw-px-6 tw-pb-6">
+            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
+              <div v-for="pkg in tenantStats[tenant.tenant_id]?.activePackages" :key="pkg.purchase_id" 
+                   class="tw-border tw-border-gray-200 dark:tw-border-gray-600 tw-rounded-lg tw-p-4 tw-bg-gradient-to-br tw-from-green-50 tw-to-green-100 dark:tw-from-green-900 dark:tw-to-green-800">
+                <div class="tw-flex tw-items-center tw-mb-3">
+                  <div class="tw-w-8 tw-h-8 tw-bg-green-500 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-mr-3">
+                    <span class="tw-text-white tw-font-bold tw-text-sm">{{ pkg.user_email.charAt(0).toUpperCase() }}</span>
+                  </div>
+                  <div class="tw-flex-1">
+                    <div class="tw-font-semibold tw-text-gray-900 tw-text-sm">{{ pkg.package_name }}</div>
+                    <div class="tw-text-xs tw-text-gray-600">{{ pkg.user_email }}</div>
+                  </div>
+                </div>
+                
+                <div class="tw-flex tw-justify-between tw-items-center tw-mb-2">
+                  <span class="tw-text-xs tw-bg-green-200 tw-text-green-800 tw-px-2 tw-py-1 tw-rounded-full">
+                    {{ formatRole(pkg.user_role) }}
+                  </span>
+                  <span class="tw-text-sm tw-font-bold tw-text-green-700">{{ formatCurrency(pkg.price) }}</span>
+                </div>
+                
+                <div class="tw-text-xs tw-text-gray-600">
+                  <div>{{ new Date(pkg.start_date).toLocaleDateString('vi-VN') }}</div>
+                  <div v-if="pkg.end_date">đến {{ new Date(pkg.end_date).toLocaleDateString('vi-VN') }}</div>
+                  <div v-else class="tw-text-green-600 tw-font-medium">Không giới hạn</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -578,6 +541,8 @@ interface UserStatistics {
 
 const tenants = ref<Tenant[]>([])
 const tenantStats = ref<Record<number, UserStatistics>>({})
+const expandedPackages = ref<Record<number, boolean>>({})
+const expandedActivePackages = ref<Record<number, boolean>>({})
 const modal = ref<{ open: boolean; mode: 'view' | 'edit'; tenant: Tenant }>({
   open: false,
   mode: 'view',
@@ -589,8 +554,22 @@ const currentTab = ref('list')
 const searchQuery = ref('')
 const statusFilter = ref('')
 
+// Get current user info
+const getCurrentUser = () => {
+  const userStr = sessionStorage.getItem('user') || localStorage.getItem('user')
+  return userStr ? JSON.parse(userStr) : null
+}
+
+const currentUser = getCurrentUser()
+
 const filteredTenants = computed(() => {
   let result = tenants.value
+  
+  // If user is tenant_admin, only show their own tenant
+  if (currentUser?.role === 'tenant_admin') {
+    result = result.filter(t => t.tenant_id === currentUser.tenant_id)
+  }
+  
   if (currentTab.value === 'list') {
     result = result.filter(t => t.status === 'active' || t.status === 'inactive')
   } else {
@@ -607,6 +586,16 @@ const filteredTenants = computed(() => {
     result = result.filter(t => t.status === statusFilter.value)
   }
   return result
+})
+
+// Check if current user can edit/delete tenants
+const canManageTenants = computed(() => {
+  return currentUser?.role === 'global_admin'
+})
+
+// Check if current user can see restore tab
+const canAccessRestoreTab = computed(() => {
+  return currentUser?.role === 'global_admin'
 })
 
 const sortedTenants = computed(() =>
@@ -662,6 +651,14 @@ const formatCurrency = (amount: number): string => {
     currency: 'VND'
   }).format(amount);
 };
+
+const togglePackageStats = (tenantId: number) => {
+  expandedPackages.value[tenantId] = !expandedPackages.value[tenantId]
+}
+
+const toggleActivePackages = (tenantId: number) => {
+  expandedActivePackages.value[tenantId] = !expandedActivePackages.value[tenantId]
+}
 
 const fetchUserStatistics = async (tenantId: number) => {
   try {
