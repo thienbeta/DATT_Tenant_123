@@ -4,9 +4,11 @@ const fileUploadController = require('../controllers/file_upload.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 const { checkRole } = require('../middleware/rbac.middleware');
 
-// Apply authentication middleware to all routes
-router.use(authMiddleware);
+// Serve file through backend proxy (no auth needed for file access)
+router.get('/serve/:objectName', fileUploadController.serveFile);
 
+// Apply authentication middleware to all other routes
+router.use(authMiddleware);
 
 // Upload file
 router.post('/upload', 

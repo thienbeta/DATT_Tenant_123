@@ -52,6 +52,7 @@ class MinioService {
       
       const metadata = {
         'Content-Type': file.mimetype,
+        'content-type': file.mimetype,
         'original-name': file.originalname,
         'tenant-id': tenantId.toString(),
         'user-id': userId.toString(),
@@ -67,7 +68,9 @@ class MinioService {
         metadata
       );
 
-      const fileUrl = await this.minioClient.presignedGetObject(this.bucketName, objectName, 24 * 60 * 60); // 24 hours
+      // Generate backend proxy URL instead of MinIO presigned URL
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+      const fileUrl = `${backendUrl}/api/file-upload/serve/${encodeURIComponent(objectName)}`;
 
       return {
         objectName,
@@ -96,10 +99,21 @@ class MinioService {
 
   async getFileUrl(objectName, expiryHours = 24) {
     try {
-      return await this.minioClient.presignedGetObject(this.bucketName, objectName, expiryHours * 60 * 60);
+      // Return backend proxy URL instead of direct MinIO URL
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+      return `${backendUrl}/api/file-upload/serve/${encodeURIComponent(objectName)}`;
     } catch (error) {
       console.error('Error generating file URL:', error);
       throw new Error('Failed to generate file URL');
+    }
+  }
+
+  async getFileStream(objectName) {
+    try {
+      return await this.minioClient.getObject(this.bucketName, objectName);
+    } catch (error) {
+      console.error('Error getting file stream from MinIO:', error);
+      throw new Error('Failed to get file stream');
     }
   }
 

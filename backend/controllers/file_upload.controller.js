@@ -143,13 +143,16 @@ exports.uploadFile = async (req, res) => {
     res.status(200).json({
       message: 'File uploaded successfully',
       file: {
+        name: uploadResult.objectName,
         objectName: uploadResult.objectName,
         fileName: uploadResult.fileName,
         originalName: uploadResult.originalName,
         fileSize: uploadResult.fileSize,
+        size: uploadResult.fileSize,
         mimeType: uploadResult.mimeType,
         fileUrl: uploadResult.fileUrl,
-        uploadDate: uploadResult.uploadDate
+        uploadDate: uploadResult.uploadDate,
+        lastModified: uploadResult.uploadDate
       },
       usage: {
         currentFileSize: serviceData.file_size,
@@ -195,14 +198,39 @@ exports.getFiles = async (req, res) => {
     const prefix = `tenant-${tenant_id}/user-${user_id}/package-${package_id}/`;
     const files = await minioService.listFiles(prefix);
 
-    // Generate URLs for each file
+    // Generate URLs and get metadata for each file
     const filesWithUrls = await Promise.all(
       files.map(async (file) => {
         const fileUrl = await minioService.getFileUrl(file.name);
-        return {
-          ...file,
-          fileUrl
-        };
+        
+        // Get file metadata to extract mimeType and original name
+        try {
+          const fileInfo = await minioService.getFileInfo(file.name);
+          return {
+            ...file,
+            fileUrl,
+            mimeType: fileInfo.metadata['content-type'] || fileInfo.metadata['Content-Type'],
+            originalName: fileInfo.metadata['original-name'] || file.name.split('/').pop()
+          };
+        } catch (metaError) {
+          console.warn('Failed to get metadata for file:', file.name, metaError.message);
+          // Fallback if metadata is not available
+          const extension = file.name.split('.').pop()?.toLowerCase();
+          let mimeType = 'application/octet-stream';
+          
+          if (['jpg', 'jpeg'].includes(extension)) mimeType = 'image/jpeg';
+          else if (extension === 'png') mimeType = 'image/png';
+          else if (extension === 'gif') mimeType = 'image/gif';
+          else if (extension === 'webp') mimeType = 'image/webp';
+          else if (extension === 'pdf') mimeType = 'application/pdf';
+          
+          return {
+            ...file,
+            fileUrl,
+            mimeType,
+            originalName: file.name.split('/').pop()
+          };
+        }
       })
     );
 
@@ -494,6 +522,42 @@ exports.checkTenantActivation = async (req, res) => {
     console.error('Error checking tenant activation:', error);
     res.status(500).json({ 
       error: 'Failed to check tenant activation',
+      details: error.message 
+    });
+  }
+};
+
+// Serve files through backend proxy
+exports.serveFile = async (req, res) => {
+  try {
+    const { objectName } = req.params;
+    
+    // Decode object name if it's URL encoded
+    const decodedObjectName = decodeURIComponent(objectName);
+    
+    console.log('Serving file:', decodedObjectName);
+    
+    // Get file stream from MinIO
+    const fileStream = await minioService.getFileStream(decodedObjectName);
+    const fileInfo = await minioService.getFileInfo(decodedObjectName);
+    
+    // Set appropriate headers
+    res.setHeader('Content-Type', fileInfo.metadata['content-type'] || 'application/octet-stream');
+    res.setHeader('Content-Length', fileInfo.size);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    
+    // Set filename header for download
+    if (fileInfo.metadata['original-name']) {
+      res.setHeader('Content-Disposition', `inline; filename="${fileInfo.metadata['original-name']}"`);
+    }
+    
+    // Pipe file stream to response
+    fileStream.pipe(res);
+    
+  } catch (error) {
+    console.error('Error serving file:', error);
+    res.status(404).json({ 
+      error: 'File not found',
       details: error.message 
     });
   }
