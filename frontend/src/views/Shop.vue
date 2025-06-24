@@ -1,285 +1,364 @@
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r shadow-sm overflow-y-auto">
-      <div class="p-4">
-        <div class="relative">
-          <button
-            @click="isCategoryOpen = !isCategoryOpen"
-            class="w-full flex items-center justify-between text-sm font-medium px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition duration-200"
-          >
-            <span class="truncate">Danh mục</span>
-            <svg
-              class="w-4 h-4 transition-transform duration-200"
-              :class="{ 'rotate-180': isCategoryOpen }"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M6 8l4 4 4-4H6z" />
-            </svg>
-          </button>
-          <transition name="fade">
-            <ul v-if="isCategoryOpen" class="mt-2 space-y-1 max-h-48 overflow-y-auto bg-gray-50 rounded-lg p-2">
-              <li
-                v-for="category in categories"
-                :key="category.category_id"
-                class="flex items-center gap-2 text-sm px-3 py-2 rounded-lg cursor-pointer hover:bg-blue-100 transition duration-200"
-                :class="{ 'bg-blue-100 text-blue-700 font-semibold': filters.category === category.category_id }"
-                @click="updateCategory(category.category_id); isCategoryOpen = false"
-              >
-                <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 3h12a1 1 0 011 1v3H3V4a1 1 0 011-1zm0 5h14v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" />
-                </svg>
-                <span class="truncate">{{ category.name }}</span>
-              </li>
-            </ul>
-          </transition>
-        </div>
-      </div>
-    </aside>
-
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
     <!-- Main Content -->
-    <main class="flex-1 p-6 overflow-y-auto">
-      <!-- Filters -->
-      <div class="mb-6">
-        <button
-          @click="isFilterOpen = !isFilterOpen"
-          class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center text-sm font-medium transition duration-200"
-        >
-          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M3 5h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h8a1 1 0 010 2H3a1 1 0 010-2zm0 4h4a1 1 0 010 2H3a1 1 0 010-2z" />
-          </svg>
-          Bộ lọc
-        </button>
-        <transition name="fade">
-          <div v-if="isFilterOpen" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-white p-4 rounded-lg shadow-glow">
-            <div>
-              <label class="block text-sm text-gray-700 font-medium mb-1">Loại gói</label>
-              <select
-                v-model="filters.package_type"
-                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm p-2 transition duration-200"
-                @change="fetchPackages"
-              >
-                <option value="">Tất cả</option>
-                <option value="free">Free</option>
-                <option value="pro">Pro</option>
-                <option value="vip_pro">VIP Pro</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm text-gray-700 font-medium mb-1">Loại dịch vụ</label>
-              <select
-                v-model="filters.service_type"
-                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm p-2 transition duration-200"
-                @change="fetchPackages"
-              >
-                <option value="">Tất cả</option>
-                <option value="vps">VPS</option>
-                <option value="hosting">Hosting</option>
-                <option value="business">Business</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm text-gray-700 font-medium mb-1">Danh mục</label>
-              <select
-                v-model="filters.category"
-                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm p-2 transition duration-200"
-                @change="fetchPackages"
-              >
-                <option value="">Tất cả</option>
-                <option v-for="category in categories" :key="category.category_id" :value="category.category_id">
-                  {{ category.name }}
-                </option>
-              </select>
+    <main class="p-8">
+      <!-- Header Section -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">Cửa hàng</h1>
+            <p class="text-slate-600">Khám phá các gói dịch vụ phù hợp với nhu cầu của bạn</p>
+          </div>
+          <button
+            @click="isFilterOpen = !isFilterOpen"
+            class="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all duration-200 shadow-sm text-slate-700 font-medium"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+            </svg>
+            Bộ lọc
+          </button>
+        </div>
+
+        <!-- Category Quick Filters -->
+        <div class="mb-6">
+          <div class="flex flex-wrap gap-3">
+            <button
+              @click="updateCategory('')"
+              class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              :class="{ 
+                'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md': filters.category === '',
+                'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50': filters.category !== ''
+              }"
+            >
+              Tất cả
+            </button>
+            <button
+              v-for="category in categories"
+              :key="category.category_id"
+              @click="updateCategory(category.category_id)"
+              class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              :class="{ 
+                'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md': filters.category === category.category_id,
+                'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50': filters.category !== category.category_id
+              }"
+            >
+              {{ category.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <transition name="slideDown">
+          <div v-if="isFilterOpen" class="bg-white/70 backdrop-blur-sm border border-slate-200/50 rounded-2xl p-6 shadow-sm mb-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Bộ lọc nâng cao</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-3">Loại gói</label>
+                <select
+                  v-model="filters.package_type"
+                  class="w-full border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 bg-white transition-all duration-200"
+                  @change="fetchPackages"
+                >
+                  <option value="">Tất cả loại gói</option>
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                  <option value="vip_pro">VIP Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-3">Loại dịch vụ</label>
+                <select
+                  v-model="filters.service_type"
+                  class="w-full border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 bg-white transition-all duration-200"
+                  @change="fetchPackages"
+                >
+                  <option value="">Tất cả dịch vụ</option>
+                  <option value="vps">VPS</option>
+                  <option value="hosting">Hosting</option>
+                  <option value="business">Business</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-3">Sắp xếp theo</label>
+                <select
+                  v-model="sortBy"
+                  class="w-full border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 bg-white transition-all duration-200"
+                  @change="sortPackages"
+                >
+                  <option value="name">Tên gói</option>
+                  <option value="price_low">Giá thấp đến cao</option>
+                  <option value="price_high">Giá cao đến thấp</option>
+                  <option value="storage">Dung lượng lưu trữ</option>
+                </select>
+              </div>
             </div>
           </div>
         </transition>
       </div>
 
       <!-- Service Packages -->
-      <div v-if="loading" class="text-center text-gray-600 text-lg flex items-center justify-center">
-        <svg class="w-6 h-6 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        Đang tải dữ liệu...
+      <div v-if="loading" class="text-center py-16">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+          <svg class="w-8 h-8 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </div>
+        <p class="text-slate-600 text-lg">Đang tải gói dịch vụ...</p>
       </div>
-      <div v-else-if="error" class="text-center text-red-600 text-lg">{{ error }}</div>
-      <div v-else-if="packages.length === 0" class="text-center text-gray-600 text-lg">Không tìm thấy gói phù hợp.</div>
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <div v-else-if="error" class="text-center py-16">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+          <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <p class="text-red-600 text-lg font-medium">{{ error }}</p>
+      </div>
+      
+      <div v-else-if="packages.length === 0" class="text-center py-16">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+          <svg class="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <p class="text-slate-600 text-lg">Không tìm thấy gói phù hợp</p>
+        <button
+          @click="resetFilters"
+          class="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+        >
+          Xóa bộ lọc
+        </button>
+      </div>
+      
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         <div
           v-for="pkg in packages"
           :key="pkg.id"
-          class="bg-white border border-gray-200 rounded-xl shadow-glow p-5 hover-scale transition duration-200 cursor-pointer"
+          class="group bg-white/70 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm hover:shadow-xl p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1"
           @click="openModal(pkg)"
         >
-          <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ pkg.name }}</h3>
-          <p class="text-2xl font-bold text-red-600 mb-2">{{ formatPrice(pkg.price) }}</p>
-          <p class="text-xs text-gray-500 mb-3">{{ pkg.billing_cycle }}</p>
-          <ul class="text-sm text-gray-700 space-y-2 mb-4">
-            <li v-if="pkg.cpu" class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              CPU: {{ pkg.cpu }}
-            </li>
-            <li v-if="pkg.ram" class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              RAM: {{ pkg.ram }}
-            </li>
-            <li v-if="pkg.file_storage_limit" class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              Storage: {{ formatStorage(pkg.file_storage_limit) }}
-            </li>
-            <li class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              Băng thông: {{ formatStorage(pkg.bandwidth_limit) }}
-            </li>
-            <li class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              Mạng: {{ pkg.network }}
-            </li>
-            <li v-if="pkg.database_limit" class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              Cơ sở dữ liệu: {{ pkg.database_limit }}
-            </li>
-            <li v-if="pkg.api_call_limit" class="flex items-center">
-              <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-              </svg>
-              API Call: {{ pkg.api_call_limit }}
-            </li>
-          </ul>
-          <button
-            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition duration-200"
-          >
+          <!-- Package Header -->
+          <div class="mb-6">
+            <div class="flex items-start justify-between mb-3">
+              <h3 class="text-xl font-bold text-slate-800 group-hover:text-blue-600 transition-colors duration-200">{{ pkg.name }}</h3>
+              <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">Hoạt động</span>
+            </div>
+            <div class="flex items-baseline gap-1 mb-2">
+              <span class="text-3xl font-bold text-slate-800">{{ formatPrice(pkg.price) }}</span>
+              <span class="text-slate-500 text-sm">/{{ pkg.billing_cycle }}</span>
+            </div>
+          </div>
+
+          <!-- Package Features -->
+          <div class="space-y-3 mb-6">
+            <div v-if="pkg.cpu" class="flex items-center gap-3 text-sm">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <span class="text-slate-700 font-medium">CPU: {{ pkg.cpu }}</span>
+            </div>
+            <div v-if="pkg.ram" class="flex items-center gap-3 text-sm">
+              <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <span class="text-slate-700 font-medium">RAM: {{ pkg.ram }}</span>
+            </div>
+            <div v-if="pkg.file_storage_limit" class="flex items-center gap-3 text-sm">
+              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <span class="text-slate-700 font-medium">Storage: {{ formatStorage(pkg.file_storage_limit) }}</span>
+            </div>
+            <div class="flex items-center gap-3 text-sm">
+              <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <span class="text-slate-700 font-medium">Băng thông: {{ formatStorage(pkg.bandwidth_limit) }}</span>
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md">
             Xem chi tiết
           </button>
         </div>
       </div>
+    </main>
 
-      <!-- Modal Popup -->
-      <transition name="modal">
-        <div v-if="modalOpen" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg relative">
-            <button
-              @click="closeModal"
-              class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-full p-2 transition duration-200"
-              title="Đóng"
-            >
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z" />
-              </svg>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-900 mb-3 truncate">{{ selectedPackage.name }}</h2>
-            <p class="text-sm text-gray-600 mb-2">Danh mục: {{ selectedPackage.category_name || 'Chưa xác định' }}</p>
-            <p class="text-xl font-bold text-red-600 mb-2">{{ formatPrice(selectedPackage.price) }}</p>
-            <p class="text-xs text-gray-500 mb-3">{{ selectedPackage.billing_cycle }}</p>
-            <ul class="text-sm text-gray-700 space-y-2 mb-4">
-              <li v-if="selectedPackage.cpu" class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                CPU: {{ selectedPackage.cpu }}
-              </li>
-              <li v-if="selectedPackage.ram" class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                RAM: {{ selectedPackage.ram }}
-              </li>
-              <li v-if="selectedPackage.file_storage_limit" class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                Storage: {{ formatStorage(selectedPackage.file_storage_limit) }}
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                Băng thông: {{ formatStorage(selectedPackage.bandwidth_limit) }}
-              </li>
-              <li class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                Mạng: {{ selectedPackage.network }}
-              </li>
-              <li v-if="selectedPackage.database_limit" class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                Cơ sở dữ liệu: {{ selectedPackage.database_limit }}
-              </li>
-              <li v-if="selectedPackage.api_call_limit" class="flex items-center">
-                <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V7a1 1 0 112 0v2h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2z" clip-rule="evenodd" />
-                </svg>
-                API Call: {{ selectedPackage.api_call_limit }}
-              </li>
-            </ul>
-            <div class="border-t border-gray-200 pt-4 mb-4">
-              <h3 class="text-sm font-semibold text-gray-900 mb-2">Thông tin đơn hàng</h3>
-              <p class="text-xs text-gray-600"><strong>Tên gói:</strong> {{ selectedPackage.name || 'Chưa xác định' }}</p>
-              <p class="text-xs text-gray-600"><strong>Loại gói:</strong> {{ selectedPackage.package_type || 'Chưa xác định' }}</p>
-              <p class="text-xs text-gray-600"><strong>Loại dịch vụ:</strong> {{ selectedPackage.service_type || 'Chưa xác định' }}</p>
-              <p class="text-xs text-gray-600"><strong>Chu kỳ thanh toán:</strong> {{ selectedPackage.billing_cycle || 'Chưa xác định' }}</p>
-              <p class="text-xs text-gray-600"><strong>Phí cài đặt:</strong> $0.00</p>
-              <p class="text-xs text-gray-600"><strong>Giá:</strong> {{ formatPrice(selectedPackage.price) }}</p>
-              <p v-if="selectedPackage.file_storage_limit" class="text-xs text-gray-600"><strong>Giới hạn lưu trữ:</strong> {{ formatStorage(selectedPackage.file_storage_limit) }}</p>
-              <p v-if="selectedPackage.bandwidth_limit" class="text-xs text-gray-600"><strong>Giới hạn băng thông:</strong> {{ formatStorage(selectedPackage.bandwidth_limit) }}</p>
-              <p v-if="selectedPackage.database_limit" class="text-xs text-gray-600"><strong>Giới hạn cơ sở dữ liệu:</strong> {{ selectedPackage.database_limit }}</p>
-              <p v-if="selectedPackage.api_call_limit" class="text-xs text-gray-600"><strong>Giới hạn API Call:</strong> {{ selectedPackage.api_call_limit }}</p>
-              <p class="text-sm font-bold text-gray-900 mt-2">Tổng tiền: {{ formatPrice(selectedPackage.price) }}</p>
+    <!-- Modal Popup -->
+    <transition name="modal">
+      <div v-if="modalOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl relative max-h-[90vh] overflow-y-auto">
+          <button
+            @click="closeModal"
+            class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-all duration-200"
+            title="Đóng"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z" />
+            </svg>
+          </button>
+
+          <!-- Modal Header -->
+          <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">{{ selectedPackage.name }}</h2>
+            <div class="flex items-center gap-4 mb-4">
+              <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">{{ selectedPackage.category_name || 'Chưa xác định' }}</span>
+              <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full">{{ selectedPackage.package_type }}</span>
             </div>
-            <transition name="fade">
-              <div v-if="showPaymentForm" class="mt-4">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Thông tin thanh toán</h3>
-                <div class="mb-4">
-                  <label class="block text-sm text-gray-700 font-medium mb-1">Phương thức thanh toán</label>
-                  <select v-model="paymentMethod" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm p-2 transition duration-200">
-                    <option value="paypal">PayPal</option>
-                    <!-- Thêm các phương thức khác nếu cần -->
-                  </select>
-                </div>
-                <button
-                  @click="processPayment"
-                  class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold transition duration-200"
-                >
-                  Xác nhận thanh toán
-                </button>
-              </div>
-            </transition>
-            <div v-if="!showPaymentForm" class="flex gap-3">
-              <button
-                @click="closeModal"
-                class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 text-sm font-medium transition duration-200"
-              >
-                Hủy
-              </button>
-              <button
-                @click="showPaymentForm = true"
-                :disabled="selectedPackage.status !== 'active'"
-                class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Thanh toán
-              </button>
+            <div class="flex items-baseline gap-2">
+              <span class="text-4xl font-bold text-slate-800">{{ formatPrice(selectedPackage.price) }}</span>
+              <span class="text-slate-500">/{{ selectedPackage.billing_cycle }}</span>
             </div>
           </div>
+
+          <!-- Package Features -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div v-if="selectedPackage.cpu" class="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
+              <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-slate-600 text-sm">CPU</p>
+                <p class="font-semibold text-slate-800">{{ selectedPackage.cpu }}</p>
+              </div>
+            </div>
+            <div v-if="selectedPackage.ram" class="flex items-center gap-4 p-4 bg-purple-50 rounded-xl">
+              <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-slate-600 text-sm">RAM</p>
+                <p class="font-semibold text-slate-800">{{ selectedPackage.ram }}</p>
+              </div>
+            </div>
+            <div v-if="selectedPackage.file_storage_limit" class="flex items-center gap-4 p-4 bg-green-50 rounded-xl">
+              <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-slate-600 text-sm">Storage</p>
+                <p class="font-semibold text-slate-800">{{ formatStorage(selectedPackage.file_storage_limit) }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-4 bg-orange-50 rounded-xl">
+              <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-slate-600 text-sm">Băng thông</p>
+                <p class="font-semibold text-slate-800">{{ formatStorage(selectedPackage.bandwidth_limit) }}</p>
+              </div>
+            </div>
+            <div v-if="selectedPackage.database_limit" class="flex items-center gap-4 p-4 bg-indigo-50 rounded-xl">
+              <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-slate-600 text-sm">Cơ sở dữ liệu</p>
+                <p class="font-semibold text-slate-800">{{ selectedPackage.database_limit }}</p>
+              </div>
+            </div>
+            <div v-if="selectedPackage.api_call_limit" class="flex items-center gap-4 p-4 bg-rose-50 rounded-xl">
+              <div class="w-10 h-10 bg-rose-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-slate-600 text-sm">API Calls</p>
+                <p class="font-semibold text-slate-800">{{ selectedPackage.api_call_limit }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="bg-slate-50 rounded-2xl p-6 mb-8">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Tóm tắt đơn hàng</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-600">Tên gói:</span>
+                <span class="font-medium text-slate-800">{{ selectedPackage.name }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Loại gói:</span>
+                <span class="font-medium text-slate-800">{{ selectedPackage.package_type }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Chu kỳ thanh toán:</span>
+                <span class="font-medium text-slate-800">{{ selectedPackage.billing_cycle }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Phí cài đặt:</span>
+                <span class="font-medium text-slate-800">$0.00</span>
+              </div>
+              <div class="border-t border-slate-200 pt-3">
+                <div class="flex justify-between items-center">
+                  <span class="font-bold text-slate-800">Tổng tiền:</span>
+                  <span class="text-2xl font-bold text-blue-600">{{ formatPrice(selectedPackage.price) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Form -->
+          <transition name="slideDown">
+            <div v-if="showPaymentForm" class="bg-blue-50 rounded-2xl p-6 mb-6">
+              <h3 class="text-lg font-bold text-slate-800 mb-4">Thông tin thanh toán</h3>
+              <div class="mb-4">
+                <label class="block text-sm font-semibold text-slate-700 mb-3">Phương thức thanh toán</label>
+                <select v-model="paymentMethod" class="w-full border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 bg-white">
+                  <option value="paypal">PayPal</option>
+                </select>
+              </div>
+              <button
+                @click="processPayment"
+                class="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white py-3 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                Xác nhận thanh toán
+              </button>
+            </div>
+          </transition>
+
+          <!-- Action Buttons -->
+          <div v-if="!showPaymentForm" class="flex gap-4">
+            <button
+              @click="closeModal"
+              class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3 rounded-xl font-medium transition-all duration-200"
+            >
+              Hủy
+            </button>
+            <button
+              @click="showPaymentForm = true"
+              :disabled="selectedPackage.status !== 'active'"
+              class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 rounded-xl font-semibold transition-all duration-200 disabled:bg-slate-400 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              Thanh toán ngay
+            </button>
+          </div>
         </div>
-      </transition>
-    </main>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -296,12 +375,12 @@ const filters = ref({
   category: '',
 });
 const categories = ref([]);
-const isCategoryOpen = ref(false);
 const isFilterOpen = ref(false);
 const modalOpen = ref(false);
 const selectedPackage = ref({});
 const showPaymentForm = ref(false);
 const paymentMethod = ref('paypal');
+const sortBy = ref('name');
 const urlBase = import.meta.env.VITE_API_URL;
 
 const getToken = () => {
@@ -452,6 +531,42 @@ const fetchCategories = async () => {
 
 const updateCategory = (categoryId) => {
   filters.value.category = categoryId;
+  fetchPackages();
+};
+
+const sortPackages = () => {
+  const sortedPackages = [...packages.value];
+  
+  switch (sortBy.value) {
+    case 'price_low':
+      sortedPackages.sort((a, b) => a.price - b.price);
+      break;
+    case 'price_high':
+      sortedPackages.sort((a, b) => b.price - a.price);
+      break;
+    case 'storage':
+      sortedPackages.sort((a, b) => {
+        const aStorage = parseInt(a.file_storage_limit) || 0;
+        const bStorage = parseInt(b.file_storage_limit) || 0;
+        return bStorage - aStorage;
+      });
+      break;
+    case 'name':
+    default:
+      sortedPackages.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+      break;
+  }
+  
+  packages.value = sortedPackages;
+};
+
+const resetFilters = () => {
+  filters.value = {
+    package_type: '',
+    service_type: '',
+    category: '',
+  };
+  sortBy.value = 'name';
   fetchPackages();
 };
 
@@ -631,12 +746,234 @@ onMounted(() => {
 </script>
 
 <style scoped>
-body { font-family: 'Inter', sans-serif; }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-.modal-enter-active, .modal-leave-active { transition: transform 0.3s ease, opacity 0.3s ease; }
-.modal-enter-from, .modal-leave-to { transform: scale(0.95); opacity: 0; }
-.shadow-glow { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15); }
-.hover-scale:hover { transform: scale(1.02); transition: transform 0.2s ease; }
-.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Font and Base Styles */
+body { 
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+}
+
+/* Smooth Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide Down Animation */
+.slideDown-enter-active,
+.slideDown-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+}
+
+.slideDown-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scaleY(0.95);
+}
+
+.slideDown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scaleY(0.95);
+}
+
+/* Fade Animation */
+.fade-enter-active, 
+.fade-leave-active { 
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.fade-enter-from, 
+.fade-leave-to { 
+  opacity: 0; 
+}
+
+/* Modal Animation */
+.modal-enter-active, 
+.modal-leave-active { 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.modal-enter-from, 
+.modal-leave-to { 
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+
+/* Enhanced Shadows */
+.shadow-glow { 
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05); 
+}
+
+.hover\:shadow-xl:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Backdrop Blur Support */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Smooth Hover Effects */
+.group:hover .group-hover\:text-blue-600 {
+  color: rgb(37 99 235);
+}
+
+/* Custom Gradient Backgrounds */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+/* Smooth Scroll */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
+}
+
+/* Loading Animation Enhancement */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Enhanced Focus States */
+select:focus,
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Card Hover Effects */
+.hover\:-translate-y-1:hover {
+  transform: translateY(-0.25rem);
+}
+
+/* Smooth Color Transitions */
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Button Enhancements */
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Responsive Grid Improvements */
+@media (max-width: 768px) {
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .xl\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Text Truncation */
+.truncate { 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+}
+
+/* Glass Effect for Cards */
+.bg-white\/70 {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.bg-white\/80 {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Border Opacity */
+.border-slate-200\/50 {
+  border-color: rgba(226, 232, 240, 0.5);
+}
+
+/* Enhanced Spacing */
+.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+.space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.5rem;
+}
+
+/* Modal Scrolling */
+.max-h-\[90vh\] {
+  max-height: 90vh;
+}
+
+/* Improved Button States */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  transform: none;
+}
+
+/* Enhanced Package Feature Icons */
+.w-8.h-8 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  min-height: 2rem;
+}
+
+.w-10.h-10 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
 </style>
