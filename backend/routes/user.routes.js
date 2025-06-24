@@ -36,5 +36,7 @@ router.put('/users/:id/restore', authMiddleware, controller.restoreCustomer); //
 // Thống kê người dùng theo tenant
 router.get('/statistics/:tenant_id', authMiddleware, controller.getUserStatistics);
 
+// Thống kê mở rộng cho tenant (bao gồm dung lượng và gói dịch vụ) 
+router.get('/extended-statistics/:tenant_id', authMiddleware, controller.getExtendedTenantStatistics);
 
 module.exports = router;

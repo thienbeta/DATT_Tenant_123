@@ -122,6 +122,191 @@
         </div>
       </div>
 
+      <!-- Thống kê dung lượng sử dụng -->
+      <div v-if="tenantStats[tenant.tenant_id]?.totalUsage" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-4 tw-gap-4 tw-mb-4">
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Tổng dung lượng</p>
+              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
+                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.file_size || 0) }}
+              </h3>
+            </div>
+            <div class="tw-p-3 tw-bg-blue-100 dark:tw-bg-blue-900 tw-rounded-full">
+              <HardDrive class="tw-w-6 tw-h-6 tw-text-blue-600 dark:tw-text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Băng thông sử dụng</p>
+              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
+                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.bandwidth_used || 0) }}
+              </h3>
+            </div>
+            <div class="tw-p-3 tw-bg-purple-100 dark:tw-bg-purple-900 tw-rounded-full">
+              <Wifi class="tw-w-6 tw-h-6 tw-text-purple-600 dark:tw-text-purple-400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">Database sử dụng</p>
+              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
+                {{ formatFileSize(tenantStats[tenant.tenant_id]?.totalUsage?.database_used || 0) }}
+              </h3>
+            </div>
+            <div class="tw-p-3 tw-bg-orange-100 dark:tw-bg-orange-900 tw-rounded-full">
+              <Database class="tw-w-6 tw-h-6 tw-text-orange-600 dark:tw-text-orange-400" />
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
+          <div class="tw-flex tw-items-center tw-justify-between">
+            <div>
+              <p class="tw-text-sm tw-text-gray-500 dark:tw-text-gray-400">API Calls</p>
+              <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800 dark:tw-text-white">
+                {{ (tenantStats[tenant.tenant_id]?.totalUsage?.api_calls_used || 0).toLocaleString() }}
+              </h3>
+            </div>
+            <div class="tw-p-3 tw-bg-indigo-100 dark:tw-bg-indigo-900 tw-rounded-full">
+              <Zap class="tw-w-6 tw-h-6 tw-text-indigo-600 dark:tw-text-indigo-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thống kê theo gói dịch vụ -->
+      <div v-if="tenantStats[tenant.tenant_id]?.storageStatsByPackage?.length > 0" class="tw-mb-4">
+        <h4 class="tw-text-lg tw-font-semibold tw-mb-3 tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+          <BarChart3 class="tw-w-5 tw-h-5 tw-mr-2" />
+          Thống kê theo gói dịch vụ
+        </h4>
+        <div v-for="packageStat in tenantStats[tenant.tenant_id]?.storageStatsByPackage" :key="packageStat.package_id" 
+             class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4 tw-border tw-border-gray-200 dark:tw-border-gray-700">
+          <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+            <h5 class="tw-font-semibold tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+              <Package class="tw-w-4 tw-h-4 tw-mr-2 tw-text-blue-600" />
+              {{ packageStat.package_name }}
+            </h5>
+            <span class="tw-text-sm tw-text-green-600 tw-font-medium tw-flex tw-items-center">
+              <DollarSign class="tw-w-4 tw-h-4 tw-mr-1" />
+              {{ formatCurrency(packageStat.price) }}
+            </span>
+          </div>
+          
+          <!-- Storage Usage -->
+          <div class="tw-mb-3">
+            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">Dung lượng</span>
+              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
+                {{ formatFileSize(packageStat.usage.file_size) }} / {{ formatFileSize(packageStat.limits.file_storage_limit) }}
+              </span>
+            </div>
+            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
+              <div class="tw-bg-blue-600 tw-h-2 tw-rounded-full" 
+                   :style="{ width: formatPercentage(packageStat.usage.file_size, packageStat.limits.file_storage_limit) + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- Bandwidth Usage -->
+          <div class="tw-mb-3">
+            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">Băng thông</span>
+              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
+                {{ formatFileSize(packageStat.usage.bandwidth_used) }} / {{ formatFileSize(packageStat.limits.bandwidth_limit) }}
+              </span>
+            </div>
+            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
+              <div class="tw-bg-purple-600 tw-h-2 tw-rounded-full" 
+                   :style="{ width: formatPercentage(packageStat.usage.bandwidth_used, packageStat.limits.bandwidth_limit) + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- Database Usage -->
+          <div class="tw-mb-3">
+            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">Database</span>
+              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
+                {{ formatFileSize(packageStat.usage.database_used) }} / {{ formatFileSize(packageStat.limits.database_limit) }}
+              </span>
+            </div>
+            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
+              <div class="tw-bg-orange-600 tw-h-2 tw-rounded-full" 
+                   :style="{ width: formatPercentage(packageStat.usage.database_used, packageStat.limits.database_limit) + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- API Calls -->
+          <div class="tw-mb-3">
+            <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+              <span class="tw-text-sm tw-text-gray-600 dark:tw-text-gray-300">API Calls</span>
+              <span class="tw-text-sm tw-font-medium tw-text-gray-800 dark:tw-text-white">
+                {{ packageStat.usage.api_calls_used.toLocaleString() }} / {{ packageStat.limits.api_call_limit.toLocaleString() }}
+              </span>
+            </div>
+            <div class="tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2">
+              <div class="tw-bg-indigo-600 tw-h-2 tw-rounded-full" 
+                   :style="{ width: formatPercentage(packageStat.usage.api_calls_used, packageStat.limits.api_call_limit) + '%' }"></div>
+            </div>
+          </div>
+
+          <div class="tw-text-xs tw-text-gray-500 dark:tw-text-gray-400">
+            {{ packageStat.usage.total_records }} bản ghi
+          </div>
+        </div>
+      </div>
+      <!-- Gói dịch vụ đang hoạt động -->
+      <div v-if="tenantStats[tenant.tenant_id]?.activePackages?.length > 0" class="tw-mb-4">
+        <h4 class="tw-text-lg tw-font-semibold tw-mb-3 tw-text-gray-800 dark:tw-text-white tw-flex tw-items-center">
+          <PieChart class="tw-w-5 tw-h-5 tw-mr-2" />
+          Gói dịch vụ đang hoạt động
+        </h4>
+        <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-overflow-hidden">
+          <div class="tw-overflow-x-auto">
+            <table class="tw-min-w-full tw-divide-y tw-divide-gray-200 dark:tw-divide-gray-700">
+              <thead class="tw-bg-gray-50 dark:tw-bg-gray-700">
+                <tr>
+                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Gói dịch vụ</th>
+                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Người dùng</th>
+                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Vai trò</th>
+                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Thời gian</th>
+                  <th class="tw-px-6 tw-py-3 tw-text-left tw-text-xs tw-font-medium tw-text-gray-500 dark:tw-text-gray-300 tw-uppercase tw-tracking-wider">Giá</th>
+                </tr>
+              </thead>
+              <tbody class="tw-bg-white dark:tw-bg-gray-800 tw-divide-y tw-divide-gray-200 dark:tw-divide-gray-700">
+                <tr v-for="pkg in tenantStats[tenant.tenant_id]?.activePackages" :key="pkg.purchase_id" class="hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700">
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                    <div class="tw-text-sm tw-font-medium tw-text-gray-900 dark:tw-text-white">{{ pkg.package_name }}</div>
+                  </td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                    <div class="tw-text-sm tw-text-gray-900 dark:tw-text-white">{{ pkg.user_email }}</div>
+                  </td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap">
+                    <span class="tw-inline-flex tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-rounded-full tw-bg-green-100 tw-text-green-800">
+                      {{ formatRole(pkg.user_role) }}
+                    </span>
+                  </td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-text-gray-500 dark:tw-text-gray-300">
+                    <div>{{ new Date(pkg.start_date).toLocaleDateString('vi-VN') }}</div>
+                    <div v-if="pkg.end_date">đến {{ new Date(pkg.end_date).toLocaleDateString('vi-VN') }}</div>
+                    <div v-else class="tw-text-green-600">Không giới hạn</div>
+                  </td>
+                  <td class="tw-px-6 tw-py-4 tw-whitespace-nowrap tw-text-sm tw-font-medium tw-text-green-600">
+                    {{ formatCurrency(pkg.price) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Thông tin Tenant -->
       <div class="tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg tw-p-4">
         <div class="tw-flex tw-justify-between tw-items-center">
@@ -320,6 +505,14 @@ import {
   Users,
   UserPlus,
   UserCog,
+  HardDrive,
+  Wifi,
+  Database,
+  Zap,
+  Package,
+  DollarSign,
+  BarChart3,
+  PieChart
 } from 'lucide-vue-next'
 
 interface AdminUser {
@@ -340,6 +533,47 @@ interface UserStatistics {
   usersByRole: Record<string, number>;
   usersByStatus: Record<string, number>;
   recentUsers: number;
+  storageStatsByPackage: Array<{
+    package_id: number;
+    package_name: string;
+    usage: {
+      file_size: number;
+      bandwidth_used: number;
+      database_used: number;
+      api_calls_used: number;
+      total_records: number;
+    };
+    limits: {
+      file_storage_limit: number;
+      bandwidth_limit: number;
+      database_limit: number;
+      api_call_limit: number;
+    };
+    price: number;
+  }>;
+  totalUsage: {
+    file_size: number;
+    bandwidth_used: number;
+    database_used: number;
+    api_calls_used: number;
+  };
+  activePackages: Array<{
+    purchase_id: number;
+    package_id: number;
+    package_name: string;
+    user_email: string;
+    user_role: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+    limits: {
+      file_storage_limit: number;
+      bandwidth_limit: number;
+      database_limit: number;
+      api_call_limit: number;
+    };
+    price: number;
+  }>;
 }
 
 const tenants = ref<Tenant[]>([])
@@ -409,6 +643,26 @@ const formatStatus = (status: string) => {
   return statusMap[status] || status;
 };
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const formatPercentage = (used: number, limit: number): number => {
+  if (limit === 0) return 0;
+  return Math.min((used / limit) * 100, 100);
+};
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(amount);
+};
+
 const fetchUserStatistics = async (tenantId: number) => {
   try {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -416,7 +670,7 @@ const fetchUserStatistics = async (tenantId: number) => {
       throw new Error('Không tìm thấy token xác thực');
     }
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/statistics/${tenantId}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/extended-statistics/${tenantId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

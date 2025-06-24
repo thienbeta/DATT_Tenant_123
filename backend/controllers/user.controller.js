@@ -1021,3 +1021,179 @@ exports.getUserStatistics = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// GET /users/extended-statistics/:tenant_id - Thống kê mở rộng bao gồm dung lượng và gói dịch vụ
+exports.getExtendedTenantStatistics = async (req, res) => {
+  try {
+    const { tenant_id } = req.params;
+    
+    // Kiểm tra quyền truy cập
+    if (req.user.role !== 'global_admin' && req.user.tenant_id !== parseInt(tenant_id)) {
+      return res.status(403).json({ error: 'Không có quyền truy cập thông tin này' });
+    }
+
+    // Lấy thống kê người dùng cơ bản
+    const totalUsers = await User.count({
+      where: { tenant_id }
+    });
+
+    const usersByRole = await User.findAll({
+      attributes: [
+        'role',
+        [sequelize.fn('COUNT', sequelize.col('user_id')), 'count']
+      ],
+      where: { tenant_id },
+      group: ['role']
+    });
+
+    const usersByStatus = await User.findAll({
+      attributes: [
+        'status',
+        [sequelize.fn('COUNT', sequelize.col('user_id')), 'count']
+      ],
+      where: { tenant_id },
+      group: ['status']
+    });
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentUsers = await User.count({
+      where: {
+        tenant_id,
+        created_at: {
+          [Op.gte]: sevenDaysAgo
+        }
+      }
+    });
+
+    // Lấy thống kê dung lượng và gói dịch vụ
+    const { ServiceData, ServicePackage, UserPurchase } = require('../models');
+    
+    // Thống kê sử dụng dịch vụ theo gói
+    const storageStats = await ServiceData.findAll({
+      where: {
+        tenant_id: tenant_id,
+        status: 'active'
+      },
+      attributes: [
+        'package_id',
+        [sequelize.fn('SUM', sequelize.col('file_size')), 'total_file_size'],
+        [sequelize.fn('SUM', sequelize.col('bandwidth_used')), 'total_bandwidth'],
+        [sequelize.fn('SUM', sequelize.col('database_used')), 'total_database'],
+        [sequelize.fn('SUM', sequelize.col('api_calls_used')), 'total_api_calls'],
+        [sequelize.fn('COUNT', sequelize.col('data_id')), 'total_records']
+      ],
+      include: [
+        {
+          model: ServicePackage,
+          as: 'package',
+          attributes: ['package_id', 'name', 'file_storage_limit', 'bandwidth_limit', 'database_limit', 'api_call_limit', 'price']
+        }
+      ],
+      group: ['package_id', 'package.package_id', 'package.name', 'package.file_storage_limit', 'package.bandwidth_limit', 'package.database_limit', 'package.api_call_limit', 'package.price']
+    });
+
+    // Lấy thông tin gói đang hoạt động
+    const activePackages = await UserPurchase.findAll({
+      where: {
+        tenant_id: tenant_id,
+        status: 'active',
+        [Op.or]: [
+          { end_date: { [Op.gt]: new Date() } },
+          { end_date: { [Op.is]: null } }
+        ]
+      },
+      include: [
+        {
+          model: ServicePackage,
+          as: 'package',
+          attributes: ['package_id', 'name', 'file_storage_limit', 'bandwidth_limit', 'database_limit', 'api_call_limit', 'price']
+        },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['user_id', 'email', 'role']
+        }
+      ]
+    });
+
+    // Tính tổng dung lượng sử dụng của tenant
+    const totalUsage = await ServiceData.findOne({
+      where: {
+        tenant_id: tenant_id,
+        status: 'active'
+      },
+      attributes: [
+        [sequelize.fn('SUM', sequelize.col('file_size')), 'total_file_size'],
+        [sequelize.fn('SUM', sequelize.col('bandwidth_used')), 'total_bandwidth'],
+        [sequelize.fn('SUM', sequelize.col('database_used')), 'total_database'],
+        [sequelize.fn('SUM', sequelize.col('api_calls_used')), 'total_api_calls']
+      ]
+    });
+
+    res.status(200).json({
+      // Thống kê người dùng
+      totalUsers,
+      usersByRole: usersByRole.reduce((acc, curr) => {
+        acc[curr.role] = curr.get('count');
+        return acc;
+      }, {}),
+      usersByStatus: usersByStatus.reduce((acc, curr) => {
+        acc[curr.status] = curr.get('count');
+        return acc;
+      }, {}),
+      recentUsers,
+      
+      // Thống kê dung lượng và gói dịch vụ
+      storageStatsByPackage: storageStats.map(stat => ({
+        package_id: stat.package_id,
+        package_name: stat.package?.name,
+        usage: {
+          file_size: parseInt(stat.get('total_file_size')) || 0,
+          bandwidth_used: parseInt(stat.get('total_bandwidth')) || 0,
+          database_used: parseInt(stat.get('total_database')) || 0,
+          api_calls_used: parseInt(stat.get('total_api_calls')) || 0,
+          total_records: parseInt(stat.get('total_records')) || 0
+        },
+        limits: {
+          file_storage_limit: stat.package?.file_storage_limit || 0,
+          bandwidth_limit: stat.package?.bandwidth_limit || 0,
+          database_limit: stat.package?.database_limit || 0,
+          api_call_limit: stat.package?.api_call_limit || 0
+        },
+        price: stat.package?.price || 0
+      })),
+      
+      // Tổng sử dụng của tenant
+      totalUsage: {
+        file_size: parseInt(totalUsage?.get('total_file_size')) || 0,
+        bandwidth_used: parseInt(totalUsage?.get('total_bandwidth')) || 0,
+        database_used: parseInt(totalUsage?.get('total_database')) || 0,
+        api_calls_used: parseInt(totalUsage?.get('total_api_calls')) || 0
+      },
+      
+      // Danh sách gói đang hoạt động
+      activePackages: activePackages.map(purchase => ({
+        purchase_id: purchase.purchase_id,
+        package_id: purchase.package_id,
+        package_name: purchase.package?.name,
+        user_email: purchase.user?.email,
+        user_role: purchase.user?.role,
+        start_date: purchase.start_date,
+        end_date: purchase.end_date,
+        status: purchase.status,
+        limits: {
+          file_storage_limit: purchase.package?.file_storage_limit || 0,
+          bandwidth_limit: purchase.package?.bandwidth_limit || 0,
+          database_limit: purchase.package?.database_limit || 0,
+          api_call_limit: purchase.package?.api_call_limit || 0
+        },
+        price: purchase.package?.price || 0
+      }))
+    });
+  } catch (error) {
+    console.error('Get extended tenant statistics error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
