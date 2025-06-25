@@ -43,4 +43,4 @@ ALTER TABLE service_packages
   ADD COLUMN bandwidth_limit BIGINT DEFAULT 0,
   ADD COLUMN database_limit BIGINT DEFAULT 0,
   ADD COLUMN api_call_limit BIGINT DEFAULT 0;
-```
+``` 

@@ -31,6 +31,18 @@ const validateServicePackage = [
     .optional()
     .isInt({ min: 0 }).withMessage('File storage limit must be a non-negative integer'),
 
+  body('bandwidth_limit')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Bandwidth limit must be a non-negative integer'),
+
+  body('database_limit')
+    .optional()
+    .isInt({ min: 0 }).withMessage('Database limit must be a non-negative integer'),
+
+  body('api_call_limit')
+    .optional()
+    .isInt({ min: 0 }).withMessage('API call limit must be a non-negative integer'),
+
   body('start_date')
     .optional({ nullable: true })
     .isDate().withMessage('Start date must be a valid date'),
@@ -46,7 +58,7 @@ const validateServicePackage = [
 
   body('category_id')
     .optional({ nullable: true })
-    .isInt({ min: 1 }).withMessage('Category ID must be a positive integer')
+    .isInt({ min: 1 }).withMessage('Category ID must be a positive integer'),
 ];
 
 const validateId = [
@@ -66,7 +78,7 @@ const validateQueryParams = [
 
   query('category_id')
     .optional({ nullable: true })
-    .isInt({ min: 1 }).withMessage('Category ID must be a positive integer')
+    .isInt({ min: 1 }).withMessage('Category ID must be a positive integer'),
 ];
 
 const handleValidationErrors = (req, res, next) => {
@@ -93,6 +105,9 @@ exports.createServicePackage = [
         billing_cycle,
         package_type,
         file_storage_limit,
+        bandwidth_limit,
+        database_limit,
+        api_call_limit,
         start_date,
         end_date,
         status,
@@ -113,7 +128,7 @@ exports.createServicePackage = [
 
       if (existingPackage) {
         return res.status(400).json({
-          message: 'A service package with the same name, type and category already exists.',
+          message: 'A service package with the same name, type, and category already exists.',
         });
       }
 
@@ -124,6 +139,9 @@ exports.createServicePackage = [
         billing_cycle,
         package_type,
         file_storage_limit,
+        bandwidth_limit: bandwidth_limit || 0,
+        database_limit: database_limit || 0,
+        api_call_limit: api_call_limit || 0,
         start_date,
         end_date,
         status,
@@ -217,6 +235,9 @@ exports.updateServicePackage = [
         billing_cycle,
         package_type,
         file_storage_limit,
+        bandwidth_limit,
+        database_limit,
+        api_call_limit,
         start_date,
         end_date,
         status,
@@ -243,6 +264,9 @@ exports.updateServicePackage = [
         billing_cycle,
         package_type,
         file_storage_limit,
+        bandwidth_limit: bandwidth_limit || 0,
+        database_limit: database_limit || 0,
+        api_call_limit: api_call_limit || 0,
         start_date,
         end_date,
         status,

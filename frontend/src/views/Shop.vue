@@ -146,7 +146,7 @@
               <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">Hoạt động</span>
             </div>
             <div class="flex items-baseline gap-1 mb-2">
-              <span class="text-3xl font-bold text-slate-800">{{ formatPrice(pkg.price) }}</span>
+              <span class="text-3xl font-bold text-slate-800">${{ Math.floor(pkg.price) }}</span>
               <span class="text-slate-500 text-sm">/{{ pkg.billing_cycle }}</span>
             </div>
           </div>
@@ -217,7 +217,7 @@
               <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full">{{ selectedPackage.package_type }}</span>
             </div>
             <div class="flex items-baseline gap-2">
-              <span class="text-4xl font-bold text-slate-800">{{ formatPrice(selectedPackage.price) }}</span>
+              <span class="text-4xl font-bold text-slate-800">${{ Math.floor(selectedPackage.price) }}</span>
               <span class="text-slate-500">/{{ selectedPackage.billing_cycle }}</span>
             </div>
           </div>
@@ -315,7 +315,7 @@
               <div class="border-t border-slate-200 pt-3">
                 <div class="flex justify-between items-center">
                   <span class="font-bold text-slate-800">Tổng tiền:</span>
-                  <span class="text-2xl font-bold text-blue-600">{{ formatPrice(selectedPackage.price) }}</span>
+                  <span class="text-2xl font-bold text-blue-600">${{ Math.floor(selectedPackage.price) }}</span>
                 </div>
               </div>
             </div>
@@ -427,7 +427,7 @@ const checkPaymentStatus = async () => {
       }
 
       const result = await response.json();
-      toast.success(`Thanh toán thành công cho gói ${result.package_name}! Tổng tiền: ${formatPrice(result.price)}`, {
+      toast.success(`Thanh toán thành công cho gói ${result.package_name}! Tổng tiền: $${Math.floor(result.price)}`, {
         timeout: 5000,
       });
 
@@ -568,22 +568,6 @@ const resetFilters = () => {
   };
   sortBy.value = 'name';
   fetchPackages();
-};
-
-const formatPrice = (price) => {
-  if (!price) return '$0.00';
-  
-  // Chuyển đổi từ VND sang USD (giả sử tỷ giá 1 USD = 24,000 VND)
-  const exchangeRate = 24000;
-  const usdPrice = price / exchangeRate;
-  
-  // Format theo USD
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(usdPrice);
 };
 
 const formatStorage = (bytes) => {
