@@ -104,6 +104,8 @@ services:
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SMTP_USER: "nguyenduyduc10122005@gmail.com"
+      SMTP_PASS: "ngxv pqmn uvay kgav"
     depends_on:
       mysql:
         condition: service_healthy

@@ -79,15 +79,17 @@ const profile = ref({
   phone_number: ''
 })
 
+const loading = ref(false)
+const error = ref('')
+const success = ref('')
+
 onMounted(() => {
   const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
   if (userStr) {
     const user = JSON.parse(userStr)
-    profile.value = {
-      full_name: user.full_name,
-      email: user.email,
-      phone_number: user.phone  // Đổi thành phone_number
-    }
+    profile.value.phone_number = user.phone || user.phone_number || profile.value.phone_number
+    profile.value.full_name = user.full_name
+    profile.value.email = user.email
   }
 })
 
@@ -97,13 +99,37 @@ const handleSave = async () => {
     error.value = ''
     success.value = ''
 
+    // Validate required fields
+    if (!profile.value.full_name.trim()) {
+      error.value = 'Họ và tên không được để trống'
+      return
+    }
+
+    if (!profile.value.phone_number.trim()) {
+      error.value = 'Số điện thoại không được để trống'
+      return
+    }
+
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    if (!token) {
+      error.value = 'Không tìm thấy token xác thực'
+      return
+    }
+
+    const requestData = {
+      full_name: profile.value.full_name.trim(),
+      phone_number: profile.value.phone_number.trim()
+    }
+
+    console.log('Sending profile update request:', {
+      url: '/api/users/profile',
+      data: requestData,
+      token: token ? 'Token exists' : 'No token'
+    })
+
     const response = await axios.put(
-      '/api/users/profile',  // URL này sẽ được proxy chuyển tiếp đến backend
-      {
-        full_name: profile.value.full_name,
-        phone_number: profile.value.phone_number
-      },
+      '/api/users/profile',
+      requestData,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -112,23 +138,47 @@ const handleSave = async () => {
       }
     )
 
+    console.log('Profile update response:', response.data)
+
     // Cập nhật thông tin user trong storage
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
     if (userStr) {
       const user = JSON.parse(userStr)
       user.full_name = response.data.user.full_name
-      user.phone_number = response.data.user.phone_number
+      user.phone = response.data.user.phone || response.data.user.phone_number
+      user.phone_number = response.data.user.phone || response.data.user.phone_number
       if (localStorage.getItem('user')) {
         localStorage.setItem('user', JSON.stringify(user))
       } else {
         sessionStorage.setItem('user', JSON.stringify(user))
       }
+      // Đồng bộ lại profile.value từ storage để luôn hiển thị đúng
+      profile.value.phone_number = user.phone || user.phone_number
+      profile.value.full_name = user.full_name
+      profile.value.email = user.email
     }
 
     success.value = 'Cập nhật thông tin thành công'
   } catch (err: any) {
-    error.value = err.response?.data?.error || 'Có lỗi xảy ra khi cập nhật thông tin'
     console.error('Error updating profile:', err)
+    console.error('Error details:', {
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data,
+      headers: err.response?.headers
+    })
+    
+    if (err.response) {
+      // Server responded with error status
+      const errorMessage = err.response.data?.message || err.response.data?.error || `Lỗi từ máy chủ (${err.response.status})`
+      error.value = errorMessage
+    } else if (err.request) {
+      // Network error
+      error.value = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.'
+    } else {
+      // Other error
+      error.value = 'Có lỗi xảy ra khi cập nhật thông tin'
+    }
   } finally {
     loading.value = false
   }

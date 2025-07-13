@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Lock, LockKeyhole, ShieldCheck, Unlock } from 'lucide-vue-next'
+import axios from 'axios'
 
 const form = ref({
   currentPassword: '',
@@ -67,7 +68,7 @@ const form = ref({
   confirmPassword: ''
 })
 
-const handleChangePassword = () => {
+const handleChangePassword = async () => {
   if (!form.value.currentPassword || !form.value.newPassword || !form.value.confirmPassword) {
     alert('Vui lòng nhập đủ thông tin.')
     return
@@ -76,6 +77,27 @@ const handleChangePassword = () => {
     alert('Mật khẩu xác nhận không trùng khớp.')
     return
   }
-  alert('Mật khẩu đã được cập nhật thành công!')
+  try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+    await axios.put(
+      '/api/users/change-password',
+      {
+        currentPassword: form.value.currentPassword,
+        newPassword: form.value.newPassword
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+    alert('Mật khẩu đã được cập nhật thành công!')
+    form.value.currentPassword = ''
+    form.value.newPassword = ''
+    form.value.confirmPassword = ''
+  } catch (err) {
+    alert(err.response?.data?.error || 'Có lỗi xảy ra khi đổi mật khẩu')
+  }
 }
 </script>

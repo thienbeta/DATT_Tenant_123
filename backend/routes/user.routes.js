@@ -6,6 +6,13 @@ const authMiddleware = require('../middleware/auth.middleware');
 // Authentication routes
 router.post('/login', controller.login);
 router.post('/register', controller.register);
+router.post('/forgot-password', controller.forgotPassword);
+router.post('/reset-password', controller.resetPassword);
+
+// Profile management (must come before /:id routes)
+router.get('/me', authMiddleware, controller.getCurrentUser);
+router.put('/profile', authMiddleware, controller.updateProfile);
+router.put('/change-password', authMiddleware, controller.changePassword);
 
 // User management routes (all require authentication)
 router.get('/', authMiddleware, controller.getAll);   // GET all users
@@ -14,15 +21,6 @@ router.post('/', authMiddleware, controller.create); // POST create user
 router.put('/:id', authMiddleware, controller.update); // PUT update user
 router.delete('/:id', authMiddleware, controller.delete); // DELETE user
 router.put('/:id/restore', authMiddleware, controller.restoreCustomer); // Restore user
-
-// Profile management
-router.get('/me', authMiddleware, controller.getCurrentUser)
-
-router.get('/', controller.getAll);                  // GET all users
-router.get('/:id', controller.getById);              // GET user by ID
-router.post('/', controller.create);                 // POST new user
-router.put('/:id', controller.update);               // PUT update user
-router.put('/profile', authMiddleware, controller.updateProfile);
 
 // Thêm các route quản lý khách hàng cho tenant
 router.get('/tenant/:tenant_id', controller.getByTenant); // GET users by tenant_id

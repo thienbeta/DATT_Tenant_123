@@ -67,7 +67,9 @@ app.use('/api/file-upload', require('./routes/file_upload.routes'));
 // Đồng bộ cơ sở dữ liệu và khởi động server
 db.sequelize.sync({ force: false, alter: false }).then(() => {
   console.log('Database synced.');
-  app.listen(3000, () => console.log('Server running on port 3000'));
+  app.listen(3000, '0.0.0.0', () => {
+    console.log('Server running on port 3000');
+  });
 }).catch(error => {
   console.error('Lỗi đồng bộ cơ sở dữ liệu:', error);
 });

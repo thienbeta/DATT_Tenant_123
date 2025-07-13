@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt'); // Missing bcrypt import
 const jwt = require('jsonwebtoken');
 const sequelize = require('sequelize');
 const { Op } = require('sequelize');
+const redisClient = require('../config/redisClient');
+const nodemailer = require('nodemailer');
 
 // GET /users
 exports.getAll = async (req, res) => {
@@ -114,6 +116,8 @@ exports.getCurrentUser = async (req, res) => {
       role: user.role,
       tenant_id: user.tenant_id,
       full_name: user.full_name,
+      phone: user.phone_number,
+      phone_number: user.phone_number
     };
 
     console.log('Returning user info:', response);
@@ -463,7 +467,6 @@ exports.login = async (req, res) => {
     }
 
     // Tạo JWT token
-    // Tạo JWT token
     const token = jwt.sign(
       { 
         user_id: user.user_id,
@@ -480,7 +483,8 @@ exports.login = async (req, res) => {
       user_id: user.user_id,
       email: user.email,
       full_name: user.full_name,
-      phone: user.phone,
+      phone: user.phone_number,
+      phone_number: user.phone_number,
       role: user.role,
       tenant_id: user.tenant_id,
       tenant: user.tenant
@@ -1195,5 +1199,121 @@ exports.getExtendedTenantStatistics = async (req, res) => {
   } catch (error) {
     console.error('Get extended tenant statistics error:', error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+// PUT /users/change-password
+exports.changePassword = async (req, res) => {
+  try {
+    const email = req.user.email; // Lấy email từ token
+    console.log('email from token:', email);
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Thiếu thông tin mật khẩu.' });
+    }
+
+    const user = await User.findOne({ where: { email } }); // Tìm user theo email
+    console.log('user found:', !!user);
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!validPassword) {
+      return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    await user.update({ password_hash: newPasswordHash });
+
+    res.status(200).json({ message: 'Đổi mật khẩu thành công.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi khi đổi mật khẩu.' });
+  }
+}
+
+// POST /users/forgot-password
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Vui lòng nhập email.' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      // To prevent email enumeration attacks, always return a generic success message.
+      return res.status(200).json({ message: 'Nếu email của bạn tồn tại trong hệ thống, một mã OTP đã được gửi đi.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpKey = `otp:${email}`;
+    await redisClient.setex(otpKey, 300, otp); // OTP is valid for 5 minutes
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"DATT" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Mã khôi phục mật khẩu',
+      html: `<p>Mã OTP để khôi phục mật khẩu của bạn là: <strong>${otp}</strong></p><p>Mã này sẽ hết hạn sau 5 phút.</p>`,
+    });
+
+    res.status(200).json({ message: 'Nếu email của bạn tồn tại trong hệ thống, một mã OTP đã được gửi đi.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Đã có lỗi xảy ra khi gửi yêu cầu khôi phục mật khẩu.' });
+  }
+};
+
+// POST /users/reset-password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ error: 'Vui lòng điền đầy đủ thông tin.' });
+    }
+
+    const otpKey = `otp:${email}`;
+    const storedOtp = await redisClient.get(otpKey);
+
+    if (!storedOtp || storedOtp !== otp) {
+      return res.status(400).json({ error: 'Mã OTP không hợp lệ hoặc đã hết hạn.' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    await user.update({ password_hash: newPasswordHash });
+    await redisClient.del(otpKey);
+
+    res.status(200).json({ message: 'Khôi phục mật khẩu thành công.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Đã có lỗi xảy ra khi khôi phục mật khẩu.' });
   }
 };

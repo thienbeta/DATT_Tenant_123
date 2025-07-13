@@ -1,152 +1,161 @@
 <template>
-  <div class="tw-p-6 tw-min-h-screen tw-bg-gray-50 dark:tw-bg-gray-900">
-    <h1 class="tw-text-3xl tw-font-semibold tw-mb-6 tw-text-gray-800 dark:tw-text-white">Quản lý Khách hàng</h1>
-
-    <!-- Thanh điều hướng -->
-    <div class="tw-flex tw-gap-4 tw-mb-6">
-      <button
-        @click="currentTab = 'list'"
-        :class="{
-          'tw-bg-[#086df9] tw-text-white': currentTab === 'list',
-          'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'list'
-        }"
-        class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
-      >
-        <List class="tw-w-5 tw-h-5" /> Danh sách Khách hàng
-      </button>
-
-      <button
-        @click="currentTab = 'restore'"
-        :class="{
-          'tw-bg-[#086df9] tw-text-white': currentTab === 'restore',
-          'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'restore'
-        }"
-        class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
-      >
-        <Recycle class="tw-w-5 tw-h-5" /> Khôi phục
-      </button>
-    </div>
-
-    <!-- Tìm kiếm và bộ lọc -->
-    <div class="tw-mb-6 tw-flex tw-gap-4 tw-items-center">
-      <!-- Tìm kiếm -->
-      <div class="tw-relative tw-w-full tw-max-w-md">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Tìm kiếm..."
-          class="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-lg focus:tw-border-[#086df9] focus:tw-ring-2 focus:tw-ring-blue-200 dark:tw-bg-gray-700 dark:tw-border-gray-600 dark:tw-text-white dark:tw-placeholder-gray-400"
-          @input="filterCustomers"
-        />
-        <span class="tw-absolute tw-right-3 tw-top-2.5 tw-text-gray-400">
-          <Search class="tw-w-5 tw-h-5" />
-        </span>
-      </div>
-
-      <!-- Bộ lọc trạng thái -->
-      <select
-        v-model="statusFilter"
-        class="tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-lg focus:tw-border-[#086df9] focus:tw-ring-2 focus:tw-ring-blue-200 dark:tw-bg-gray-700 dark:tw-border-gray-600 dark:tw-text-white"
-        @change="filterCustomers"
-      >
-        <option value="">Tất cả trạng thái</option>
-        <option value="active">Hoạt động</option>
-        <option value="inactive">Tạm dừng</option>
-      </select>
-
-      <!-- Nút thêm khách hàng mới -->
-      <button
-        @click="openModal('add', {})"
-        class="tw-px-4 tw-py-2 tw-bg-[#086df9] tw-text-white tw-rounded-lg tw-font-medium hover:tw-bg-blue-700 tw-transition tw-flex tw-items-center tw-gap-2"
-      >
-        <PlusCircle class="tw-w-5 tw-h-5" /> Thêm khách hàng
-      </button>
-    </div>
-
-    <!-- Bảng hiển thị khách hàng -->
-    <div class="tw-overflow-x-auto tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg">
-      <table class="tw-min-w-full tw-table-auto">
-        <thead class="tw-bg-gray-100 dark:tw-bg-gray-700">
-          <tr>
-            <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">ID</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Họ tên</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Email</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Số điện thoại</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Vai trò</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Tenant</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Ngày tạo</th>
-            <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Trạng thái</th>
-            <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="customer in paginatedCustomers"
-            :key="customer.user_id"
-            class="tw-border-b dark:tw-border-gray-700 tw-transition tw-duration-200 hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700"
+  <div class="tw-h-screen tw-bg-gray-50 dark:tw-bg-gray-900 tw-flex tw-flex-col">
+    <div class="tw-flex-grow tw-overflow-y-auto">
+      <div class="tw-p-6">
+        <!-- Header -->
+        <div class="tw-flex tw-justify-between tw-items-center tw-mb-6">
+          <h1 class="tw-text-3xl tw-font-semibold tw-text-gray-800 dark:tw-text-white">Quản lý Khách hàng</h1>
+          <!-- Nút thêm khách hàng mới -->
+          <button
+            @click="openModal('add', {})"
+            class="tw-px-4 tw-py-2 tw-bg-[#086df9] tw-text-white tw-rounded-lg tw-font-medium hover:tw-bg-blue-700 tw-transition tw-flex tw-items-center tw-gap-2"
           >
-            <td class="tw-px-6 tw-py-4 tw-text-center tw-text-gray-700 dark:tw-text-gray-300">{{ customer.user_id }}</td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.full_name }}</td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.email }}</td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.phone_number }}</td>
-            <td class="tw-px-6 tw-py-4">
-              <span
-                :class="[
-                  'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
-                  customer.role === 'global_admin' ? 'tw-bg-purple-100 tw-text-purple-700' :
-                  customer.role === 'tenant_admin' ? 'tw-bg-blue-100 tw-text-blue-700' :
-                  'tw-bg-green-100 tw-text-green-700'
-                ]"
+            <PlusCircle class="tw-w-5 tw-h-5" /> Thêm khách hàng
+          </button>
+        </div>
+
+        <!-- Thanh điều khiển: Tabs, Tìm kiếm, Bộ lọc -->
+        <div class="tw-flex tw-justify-between tw-items-center tw-mb-6">
+          <!-- Thanh điều hướng (Tabs) -->
+          <div class="tw-flex tw-gap-4">
+            <button
+              @click="currentTab = 'list'"
+              :class="{
+                'tw-bg-[#086df9] tw-text-white': currentTab === 'list',
+                'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'list'
+              }"
+              class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
+            >
+              <List class="tw-w-5 tw-h-5" /> Danh sách Khách hàng
+            </button>
+
+            <button
+              @click="currentTab = 'restore'"
+              :class="{
+                'tw-bg-[#086df9] tw-text-white': currentTab === 'restore',
+                'tw-bg-gray-200 tw-text-gray-700 dark:tw-bg-gray-700 dark:tw-text-gray-300': currentTab !== 'restore'
+              }"
+              class="tw-px-5 tw-py-2 tw-rounded-lg tw-font-medium tw-transition tw-duration-300 hover:tw-bg-blue-600 hover:tw-text-white tw-flex tw-items-center tw-gap-2"
+            >
+              <Recycle class="tw-w-5 tw-h-5" /> Khôi phục
+            </button>
+          </div>
+
+          <!-- Tìm kiếm và bộ lọc -->
+          <div class="tw-flex tw-gap-4 tw-items-center">
+            <!-- Tìm kiếm -->
+            <div class="tw-relative tw-w-full tw-max-w-xs">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Tìm kiếm..."
+                class="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-lg focus:tw-border-[#086df9] focus:tw-ring-2 focus:tw-ring-blue-200 dark:tw-bg-gray-700 dark:tw-border-gray-600 dark:tw-text-white dark:tw-placeholder-gray-400"
+                @input="filterCustomers"
+              />
+              <span class="tw-absolute tw-right-3 tw-top-2.5 tw-text-gray-400">
+                <Search class="tw-w-5 tw-h-5" />
+              </span>
+            </div>
+
+            <!-- Bộ lọc trạng thái -->
+            <select
+              v-model="statusFilter"
+              class="tw-px-4 tw-py-2 tw-border tw-border-gray-300 tw-rounded-lg focus:tw-border-[#086df9] focus:tw-ring-2 focus:tw-ring-blue-200 dark:tw-bg-gray-700 dark:tw-border-gray-600 dark:tw-text-white"
+              @change="filterCustomers"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Tạm dừng</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bảng hiển thị khách hàng -->
+        <div class="tw-overflow-x-auto tw-bg-white dark:tw-bg-gray-800 tw-rounded-xl tw-shadow-lg">
+          <table class="tw-min-w-full tw-table-auto">
+            <thead class="tw-bg-gray-100 dark:tw-bg-gray-700">
+              <tr>
+                <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">ID</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Họ tên</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Email</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Số điện thoại</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Vai trò</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Tenant</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Ngày tạo</th>
+                <th class="tw-text-left tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Trạng thái</th>
+                <th class="tw-text-center tw-px-6 tw-py-3 tw-text-sm tw-font-semibold dark:tw-text-white">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="customer in paginatedCustomers"
+                :key="customer.user_id"
+                class="tw-border-b dark:tw-border-gray-700 tw-transition tw-duration-200 hover:tw-bg-gray-50 dark:hover:tw-bg-gray-700"
               >
-                {{ 
-                  customer.role === 'global_admin' ? 'Quản trị viên hệ thống' : 
-                  customer.role === 'tenant_admin' ? 'Quản trị viên tenant' : 
-                  'Người dùng tenant' 
-                }}
-              </span>
-            </td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
-              <span v-if="customer.tenant_id">
-                {{ customer.tenant?.name || `Tenant ID: ${customer.tenant_id}` }}
-              </span>
-              <span v-else class="tw-text-gray-400">Không có tenant</span>
-            </td>
-            <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
-              {{ new Date(customer.created_at || '').toLocaleDateString('vi-VN') }}
-            </td>
-            <td class="tw-px-6 tw-py-4">
-              <span
-                :class="[
-                  'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
-                  customer.status === 'active' ? 'tw-bg-green-100 tw-text-green-700' :
-                  customer.status === 'inactive' ? 'tw-bg-yellow-100 tw-text-yellow-700' :
-                  'tw-bg-red-100 tw-text-red-700'
-                ]"
-              >
-                {{ customer.status === 'active' ? 'Hoạt động' : customer.status === 'inactive' ? 'Tạm dừng' : 'Đã xóa' }}
-              </span>
-            </td>
-            <td class="tw-px-6 tw-py-4 tw-text-center tw-flex tw-justify-center tw-gap-2">
-              <button @click="openModal('view', customer)" class="tw-text-green-600 hover:tw-text-green-800 tw-transition">
-                <Eye class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'list'" @click="openModal('edit', customer)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
-                <Edit class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'list'" @click="moveToTrash(customer)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
-                <Trash2 class="tw-w-5 tw-h-5" />
-              </button>
-              <button v-if="currentTab === 'restore'" @click="restoreCustomer(customer)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
-                <RefreshCcw class="tw-w-5 tw-h-5" />
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <td class="tw-px-6 tw-py-4 tw-text-center tw-text-gray-700 dark:tw-text-gray-300">{{ customer.user_id }}</td>
+                <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.full_name }}</td>
+                <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.email }}</td>
+                <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">{{ customer.phone_number }}</td>
+                <td class="tw-px-6 tw-py-4">
+                  <span
+                    :class="[
+                      'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
+                      customer.role === 'global_admin' ? 'tw-bg-purple-100 tw-text-purple-700' :
+                      customer.role === 'tenant_admin' ? 'tw-bg-blue-100 tw-text-blue-700' :
+                      'tw-bg-green-100 tw-text-green-700'
+                    ]"
+                  >
+                    {{ 
+                      customer.role === 'global_admin' ? 'Quản trị viên hệ thống' : 
+                      customer.role === 'tenant_admin' ? 'Quản trị viên tenant' : 
+                      'Người dùng tenant' 
+                    }}
+                  </span>
+                </td>
+                <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
+                  <span v-if="customer.tenant_id">
+                    {{ customer.tenant?.name || `Tenant ID: ${customer.tenant_id}` }}
+                  </span>
+                  <span v-else class="tw-text-gray-400">Không có tenant</span>
+                </td>
+                <td class="tw-px-6 tw-py-4 tw-text-gray-700 dark:tw-text-gray-300">
+                  {{ new Date(customer.created_at || '').toLocaleDateString('vi-VN') }}
+                </td>
+                <td class="tw-px-6 tw-py-4">
+                  <span
+                    :class="[
+                      'tw-inline-block tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-full',
+                      customer.status === 'active' ? 'tw-bg-green-100 tw-text-green-700' :
+                      customer.status === 'inactive' ? 'tw-bg-yellow-100 tw-text-yellow-700' :
+                      'tw-bg-red-100 tw-text-red-700'
+                    ]"
+                  >
+                    {{ customer.status === 'active' ? 'Hoạt động' : customer.status === 'inactive' ? 'Tạm dừng' : 'Đã xóa' }}
+                  </span>
+                </td>
+                <td class="tw-px-6 tw-py-4 tw-text-center tw-flex tw-justify-center tw-gap-2">
+                  <button @click="openModal('view', customer)" class="tw-text-green-600 hover:tw-text-green-800 tw-transition">
+                    <Eye class="tw-w-5 tw-h-5" />
+                  </button>
+                  <button v-if="currentTab === 'list'" @click="openModal('edit', customer)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
+                    <Edit class="tw-w-5 tw-h-5" />
+                  </button>
+                  <button v-if="currentTab === 'list'" @click="moveToTrash(customer)" class="tw-text-red-600 hover:tw-text-red-800 tw-transition">
+                    <Trash2 class="tw-w-5 tw-h-5" />
+                  </button>
+                  <button v-if="currentTab === 'restore'" @click="restoreCustomer(customer)" class="tw-text-[#086df9] hover:tw-text-blue-700 tw-transition">
+                    <RefreshCcw class="tw-w-5 tw-h-5" />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Phân trang -->
-    <div class="tw-mt-6 tw-flex tw-justify-between tw-items-center tw-text-gray-600 dark:tw-text-gray-300">
+    <div class="tw-flex-shrink-0 tw-p-6 tw-flex tw-justify-between tw-items-center tw-text-gray-600 dark:tw-text-gray-300 tw-border-t dark:tw-border-gray-700">
       <div class="tw-text-sm">
         Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredCustomers.length) }} của {{ filteredCustomers.length }} khách hàng
       </div>

@@ -68,7 +68,7 @@
       </header>
 
       <!-- Main content cuộn được -->
-      <main class="tw-flex-1 tw-overflow-y-auto tw-p-4 dark:tw-text-white">
+      <main class="tw-flex-1">
         <router-view />
       </main>
 
