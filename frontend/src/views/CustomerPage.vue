@@ -343,7 +343,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import {
@@ -372,24 +372,11 @@ import {
 } from 'lucide-vue-next'
 import axios from 'axios'
 
-interface Customer {
-  user_id: number
-  email: string
-  full_name: string
-  phone_number: string
-  status: 'active' | 'inactive' | 'deleted'
-  created_at?: string
-  password?: string
-  role?: string
-  tenant_id?: number
-  tenant?: { name: string }
-}
-
-const customers = ref<Customer[]>([])
-const modal = ref<{ open: boolean; mode: 'view' | 'edit' | 'add'; customer: Customer }>({  
+const customers = ref([])
+const modal = ref({  
   open: false,
   mode: 'view',
-  customer: {} as Customer
+  customer: {}
 })
 const currentPage = ref(1)
 const itemsPerPage = 20
@@ -435,7 +422,7 @@ const paginatedCustomers = computed(() => {
   return sortedCustomers.value.slice(start, end)
 })
 
-const openModal = (mode: 'view' | 'edit' | 'add', customer: Customer) => {
+const openModal = (mode, customer) => {
   modal.value = { open: true, mode, customer: { ...customer } }
 }
 
@@ -481,8 +468,6 @@ const fetchCustomers = async () => {
         user.user_id !== currentUser.user_id
       );
     }
-
-    filteredCustomers.value = customers.value;
 
     if (customers.value.length === 0) {
       Swal.fire({
@@ -655,7 +640,7 @@ const addCustomer = async () => {
       showConfirmButton: false,
       showCloseButton: true,
     })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Lỗi thêm người dùng:', err)
     // Kiểm tra nếu lỗi là do email trùng lặp từ server
     if (err.response?.data?.error?.includes('Email đã được sử dụng')) {
@@ -704,7 +689,7 @@ const updateCustomer = async () => {
       showConfirmButton: false,
       showCloseButton: true,
     })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Lỗi cập nhật:', err)
     Swal.fire({
       icon: 'error',
@@ -715,7 +700,7 @@ const updateCustomer = async () => {
   }
 }
 
-const moveToTrash = async (customer: Customer) => {
+const moveToTrash = async (customer) => {
   const result = await Swal.fire({
     title: 'Xác nhận',
     text: `Bạn có chắc muốn chuyển người dùng ${customer.full_name} vào thùng rác?`,
@@ -749,7 +734,7 @@ const moveToTrash = async (customer: Customer) => {
         showConfirmButton: false,
         showCloseButton: true,
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Lỗi:', err)
       Swal.fire({
         icon: 'error',
@@ -765,7 +750,7 @@ const moveToTrash = async (customer: Customer) => {
   }
 }
 
-const restoreCustomer = async (customer: Customer) => {
+const restoreCustomer = async (customer) => {
   const result = await Swal.fire({
     title: 'Xác nhận',
     text: `Bạn có chắc muốn khôi phục người dùng ${customer.full_name}?`,
@@ -801,7 +786,7 @@ const restoreCustomer = async (customer: Customer) => {
         showConfirmButton: false,
         showCloseButton: true,
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Lỗi:', err)
       Swal.fire({
         icon: 'error',
