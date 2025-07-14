@@ -6,13 +6,22 @@ const cors = require('cors');
 
 const app = express();
 
+// Lấy danh sách origins từ biến môi trường
+const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:5173'];
+console.log('Allowed CORS origins:', allowedOrigins);
+
 // Cấu hình CORS chi tiết hơn
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Cho phép các origin cụ thể
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Cho phép các phương thức
-  allowedHeaders: ['Content-Type', 'Authorization'], // Cho phép các header
-  credentials: true // Cho phép gửi cookie
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+
+// Add health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Tạo redisClient một lần duy nhất
 const redisClient = createClient({
