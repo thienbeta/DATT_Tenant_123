@@ -6,37 +6,34 @@ const authMiddleware = require('../middleware/auth.middleware');
 // Authentication routes
 router.post('/login', controller.login);
 router.post('/register', controller.register);
-
-// User management routes (all require authentication)
-router.get('/', authMiddleware, controller.getAll);   // GET all users
-router.get('/:id', authMiddleware, controller.getById); // GET user by ID
-router.post('/', authMiddleware, controller.create); // POST create user
-router.put('/:id', authMiddleware, controller.update); // PUT update user
-router.delete('/:id', authMiddleware, controller.delete); // DELETE user
-router.put('/:id/restore', authMiddleware, controller.restoreCustomer); // Restore user
+router.post('/forgot-password', controller.forgotPassword);
+router.post('/reset-password', controller.resetPassword);
 
 // Profile management
-router.get('/me', authMiddleware, controller.getCurrentUser)
-
-router.get('/', controller.getAll);                  // GET all users
-router.get('/:id', controller.getById);              // GET user by ID
-router.post('/', controller.create);                 // POST new user
-router.put('/:id', controller.update);               // PUT update user
+router.get('/profile', authMiddleware, controller.getCurrentUser);
 router.put('/profile', authMiddleware, controller.updateProfile);
 
-// Thêm các route quản lý khách hàng cho tenant
-router.get('/tenant/:tenant_id', controller.getByTenant); // GET users by tenant_id
-router.get('/role/:role', controller.getByRole);     // GET users by role
-router.get('/users', authMiddleware, controller.getCustomers);
-router.get('/users/:id', authMiddleware, controller.getCustomerById); // Lấy thông tin chi tiết khách hàng
-router.put('/users/:id', authMiddleware, controller.updateCustomer);  // Cập nhật thông tin khách hàng
-router.delete('/users/:id', authMiddleware, controller.deleteCustomer); // Xóa khách hàng
-router.put('/users/:id/restore', authMiddleware, controller.restoreCustomer); // Khôi phục khách hàng
+// Change password route (move above /:id)
+router.put('/change-password', authMiddleware, controller.changePassword);
 
-// Thống kê người dùng theo tenant
+// User management routes (all require authentication)
+router.get('/', authMiddleware, controller.getAll);
+router.get('/me', authMiddleware, controller.getCurrentUser);
+router.post('/', authMiddleware, controller.create);
+router.put('/:id', authMiddleware, controller.update);
+router.delete('/:id', authMiddleware, controller.delete);
+
+// Customer management
+router.get('/tenant/:tenant_id', authMiddleware, controller.getByTenant);
+router.get('/role/:role', authMiddleware, controller.getByRole);
+router.get('/customers', authMiddleware, controller.getCustomers);
+router.get('/customers/:id', authMiddleware, controller.getCustomerById);
+router.put('/customers/:id', authMiddleware, controller.updateCustomer);
+router.delete('/customers/:id', authMiddleware, controller.deleteCustomer);
+router.post('/customers/restore/:id', authMiddleware, controller.restoreCustomer);
+
+// Statistics
 router.get('/statistics/:tenant_id', authMiddleware, controller.getUserStatistics);
-
-// Thống kê mở rộng cho tenant (bao gồm dung lượng và gói dịch vụ) 
 router.get('/extended-statistics/:tenant_id', authMiddleware, controller.getExtendedTenantStatistics);
 
 module.exports = router;
